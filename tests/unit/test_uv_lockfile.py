@@ -5,8 +5,8 @@ from pathlib import Path
 import pytest
 
 from gvx.uv.lockfile import (
-    LockfilePackage,
     GVXLockfile,
+    LockfilePackage,
     UVLockfileParser,
 )
 

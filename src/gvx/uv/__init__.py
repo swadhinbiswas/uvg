@@ -8,8 +8,8 @@ from gvx.uv.lockfile import GVXLockfile, UVLockfileParser
 from gvx.uv.resolver import ResolutionResult, UVResolver
 
 __all__ = [
-    "ResolutionResult",
     "GVXLockfile",
+    "ResolutionResult",
     "UVLockfileParser",
     "UVResolver",
 ]

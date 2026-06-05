@@ -7,6 +7,7 @@ from gvx.core.exceptions import (
     ConfigurationError,
     CredentialNotFoundError,
     FingerprintMismatchError,
+    GVXError,
     HashMismatchError,
     IndexCorruptionError,
     ObjectExistsError,
@@ -17,7 +18,6 @@ from gvx.core.exceptions import (
     SecurityError,
     StoreCorruptionError,
     StoreError,
-    GVXError,
     VerificationFailedError,
 )
 
