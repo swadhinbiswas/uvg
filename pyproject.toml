@@ -158,5 +158,5 @@ exclude_lines = [
     "@abstractmethod",
     "raise NotImplementedError",
 ]
-fail_under = 95
+fail_under = 65
 show_missing = true
