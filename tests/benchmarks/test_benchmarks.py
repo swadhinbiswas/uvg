@@ -1,4 +1,4 @@
-"""Benchmark tests for UVG performance."""
+"""Benchmark tests for GVX performance."""
 
 from __future__ import annotations
 
@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from uvg.runtime.builder import RuntimeBuilder
-from uvg.uv.cache import UVCache
+from gvx.runtime.builder import RuntimeBuilder
+from gvx.uv.cache import UVCache
 
 
 @pytest.fixture

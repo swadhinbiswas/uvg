@@ -7,7 +7,7 @@
 
 ## Overview
 
-UVG uses SQLite for all persistent indexing. SQLite provides ACID guarantees, concurrent access (WAL mode), and zero configuration. All databases are located in `~/.uvg/store/index/`.
+GVX uses SQLite for all persistent indexing. SQLite provides ACID guarantees, concurrent access (WAL mode), and zero configuration. All databases are located in `~/.gvx/store/index/`.
 
 ---
 
@@ -43,7 +43,7 @@ CREATE TABLE objects (
     extracted_at TEXT NOT NULL,
     reference_count INTEGER NOT NULL DEFAULT 0,
     last_accessed TEXT,
-    created_by TEXT NOT NULL DEFAULT 'uvg'
+    created_by TEXT NOT NULL DEFAULT 'gvx'
 );
 
 -- Package metadata (from dist-info)

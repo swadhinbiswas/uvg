@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from uvg.core.exceptions import (
+from gvx.core.exceptions import (
     CLIError,
     ConfigurationError,
     CredentialNotFoundError,
@@ -17,19 +17,19 @@ from uvg.core.exceptions import (
     SecurityError,
     StoreCorruptionError,
     StoreError,
-    UVGError,
+    GVXError,
     VerificationFailedError,
 )
 
 
 class TestExceptionHierarchy:
-    def test_uvg_error_base(self) -> None:
-        err = UVGError("test")
+    def test_gvx_error_base(self) -> None:
+        err = GVXError("test")
         assert isinstance(err, Exception)
 
     def test_store_error_inheritance(self) -> None:
         err = StoreError("test")
-        assert isinstance(err, UVGError)
+        assert isinstance(err, GVXError)
 
     def test_object_not_found(self) -> None:
         err = ObjectNotFoundError("abc123")
@@ -58,7 +58,7 @@ class TestExceptionHierarchy:
 
     def test_runtime_error_inheritance(self) -> None:
         err = RuntimeOperationError("test")
-        assert isinstance(err, UVGError)
+        assert isinstance(err, GVXError)
 
     def test_runtime_not_found(self) -> None:
         err = RuntimeNotFoundError("/path/to/project")
@@ -74,12 +74,12 @@ class TestExceptionHierarchy:
 
     def test_index_corruption(self) -> None:
         err = IndexCorruptionError("corrupt index")
-        assert isinstance(err, UVGError)
+        assert isinstance(err, GVXError)
         assert "corrupt index" in str(err)
 
     def test_security_error_inheritance(self) -> None:
         err = SecurityError("test")
-        assert isinstance(err, UVGError)
+        assert isinstance(err, GVXError)
 
     def test_verification_failed(self) -> None:
         err = VerificationFailedError("verification failed")
@@ -88,7 +88,7 @@ class TestExceptionHierarchy:
 
     def test_offline_resolution(self) -> None:
         err = OfflineResolutionError("numpy", "2.3.0")
-        assert isinstance(err, UVGError)
+        assert isinstance(err, GVXError)
         assert "numpy" in str(err)
         assert "2.3.0" in str(err)
         assert err.package_name == "numpy"
@@ -102,9 +102,9 @@ class TestExceptionHierarchy:
 
     def test_cli_error(self) -> None:
         err = CLIError("cli error")
-        assert isinstance(err, UVGError)
+        assert isinstance(err, GVXError)
 
     def test_configuration_error(self) -> None:
         err = ConfigurationError("bad config")
-        assert isinstance(err, UVGError)
+        assert isinstance(err, GVXError)
         assert "bad config" in str(err)

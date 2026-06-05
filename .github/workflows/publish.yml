@@ -54,7 +54,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: pypi
-      url: https://pypi.org/p/uvg
+      url: https://pypi.org/p/gvx
     if: github.event_name == 'release' || !inputs.publish_to_testpypi
 
     permissions:
@@ -79,7 +79,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: testpypi
-      url: https://test.pypi.org/p/uvg
+      url: https://test.pypi.org/p/gvx
     if: inputs.publish_to_testpypi
 
     permissions:

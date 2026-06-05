@@ -4,8 +4,8 @@ import json
 import tarfile
 from pathlib import Path
 
-from uvg.cli.export_import import export, import_runtime
-from uvg.runtime.builder import RuntimeBuilder
+from gvx.cli.export_import import export, import_runtime
+from gvx.runtime.builder import RuntimeBuilder
 
 
 class TestExportImport:
@@ -17,12 +17,12 @@ class TestExportImport:
         project_dir = tmp_path / "project"
         project_dir.mkdir()
 
-        # Create uvg.lock
-        lockfile = project_dir / "uvg.lock"
+        # Create gvx.lock
+        lockfile = project_dir / "gvx.lock"
         lockfile.write_text(json.dumps({"python_version": "3.13", "packages": []}))
 
         # Create runtime directory
-        runtime_dir = project_dir / ".uvg" / "runtime"
+        runtime_dir = project_dir / ".gvx" / "runtime"
         runtime_dir.mkdir(parents=True)
         (runtime_dir / "site-packages").mkdir()
         (runtime_dir / "manifest.json").write_text(json.dumps({"python_version": "3.13", "packages": []}))
@@ -51,7 +51,7 @@ class TestExportImport:
             with tarfile.open(output, "r:gz") as tar:
                 names = tar.getnames()
                 assert "runtime/manifest.json" in names
-                assert "uvg.lock" in names
+                assert "gvx.lock" in names
         finally:
             os.chdir(old_cwd)
 
@@ -64,12 +64,12 @@ class TestExportImport:
         source_dir = tmp_path / "source"
         source_dir.mkdir()
 
-        # Create uvg.lock
-        lockfile = source_dir / "uvg.lock"
+        # Create gvx.lock
+        lockfile = source_dir / "gvx.lock"
         lockfile.write_text(json.dumps({"python_version": "3.13", "packages": []}))
 
         # Create runtime directory
-        runtime_dir = source_dir / ".uvg" / "runtime"
+        runtime_dir = source_dir / ".gvx" / "runtime"
         runtime_dir.mkdir(parents=True)
         (runtime_dir / "site-packages").mkdir()
         (runtime_dir / "manifest.json").write_text(json.dumps({"python_version": "3.13", "packages": []}))
@@ -77,14 +77,14 @@ class TestExportImport:
         # Create tarball
         with tarfile.open(tarball, "w:gz") as tar:
             tar.add(runtime_dir, arcname="runtime")
-            tar.add(lockfile, arcname="uvg.lock")
+            tar.add(lockfile, arcname="gvx.lock")
 
         # Create target project
         target_dir = tmp_path / "target"
         target_dir.mkdir()
 
-        # Create uvg.lock in target
-        target_lockfile = target_dir / "uvg.lock"
+        # Create gvx.lock in target
+        target_lockfile = target_dir / "gvx.lock"
         target_lockfile.write_text(json.dumps({"python_version": "3.13", "packages": []}))
 
         # Change to target directory
@@ -103,7 +103,7 @@ class TestExportImport:
             assert result.exit_code == 0
 
             # Verify runtime was extracted
-            target_runtime = target_dir / ".uvg" / "runtime"
+            target_runtime = target_dir / ".gvx" / "runtime"
             assert target_runtime.exists()
             assert (target_runtime / "manifest.json").exists()
             assert (target_runtime / "site-packages").exists()
@@ -117,7 +117,7 @@ class TestExportImport:
         project_dir.mkdir()
 
         # Create runtime directory
-        runtime_dir = project_dir / ".uvg" / "runtime"
+        runtime_dir = project_dir / ".gvx" / "runtime"
         runtime_dir.mkdir(parents=True)
         site_packages = runtime_dir / "site-packages"
         site_packages.mkdir()

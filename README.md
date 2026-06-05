@@ -1,23 +1,23 @@
-# UVG
+# GVX
 
-[![Version](https://img.shields.io/badge/version-0.1.0-blue)](https://github.com/swadhin/uvg/releases)
-[![License](https://img.shields.io/badge/license-MIT-yellow)](https://github.com/swadhin/uvg/blob/main/LICENSE)
+[![Version](https://img.shields.io/badge/version-0.1.0-blue)](https://github.com/swadhin/gvx/releases)
+[![License](https://img.shields.io/badge/license-MIT-yellow)](https://github.com/swadhin/gvx/blob/main/LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/downloads/)
-[![Tests](https://github.com/swadhin/uvg/actions/workflows/ci.yml/badge.svg)](https://github.com/swadhin/uvg/actions)
-[![codecov](https://codecov.io/gh/swadhin/uvg/branch/main/graph/badge.svg)](https://codecov.io/gh/swadhin/uvg)
-[![Documentation](https://img.shields.io/badge/docs-uvg.opencodehub.space-blue)](https://uvg.opencodehub.space)
+[![Tests](https://github.com/swadhin/gvx/actions/workflows/ci.yml/badge.svg)](https://github.com/swadhin/gvx/actions)
+[![codecov](https://codecov.io/gh/swadhin/gvx/branch/main/graph/badge.svg)](https://codecov.io/gh/swadhin/gvx)
+[![Documentation](https://img.shields.io/badge/docs-gvx.opencodehub.space-blue)](https://gvx.opencodehub.space)
 
 <div align="center">
 
-![UVG Logo](docs/public/logo.gif)
+![GVX Logo](docs/public/logo.gif)
 
 </div>
 
 **The runtime layer that Python never had.**
 
-UVG is not a package manager. UVG is not a dependency resolver. UVG is not a replacement for [UV](https://docs.astral.sh/uv/).
+GVX is not a package manager. GVX is not a dependency resolver. GVX is not a replacement for [UV](https://docs.astral.sh/uv/).
 
-UVG is a **runtime, storage, caching, and dependency intelligence layer** built on top of UV.
+GVX is a **runtime, storage, caching, and dependency intelligence layer** built on top of UV.
 
 ---
 
@@ -30,13 +30,13 @@ UVG is a **runtime, storage, caching, and dependency intelligence layer** built 
 - **CI/CD ready** — Export/import runtimes for deployment
 - **Workspace support** — First-class monorepo management
 - **Parallel downloads** — Leverages UV's fast download system
-- **Disk-space efficient** — With a [global cache](https://uvg.opencodehub.space/concepts/store/) for dependency deduplication
+- **Disk-space efficient** — With a [global cache](https://gvx.opencodehub.space/concepts/store/) for dependency deduplication
 - **Installable** via `curl` or `pip`
 - **Supports** macOS, Linux, and Windows
 
 ---
 
-## Why UVG?
+## Why GVX?
 
 ```
 uv  0.06s
@@ -47,27 +47,27 @@ pip-sync  4.63s
 
 *Installing Trio's dependencies with a warm cache.*
 
-UVG inherits UV's speed and adds **runtime isolation without duplication**. While other tools copy packages into virtual environments, UVG creates **symlinks to UV's global cache** — giving you isolated runtimes in milliseconds, not seconds.
+GVX inherits UV's speed and adds **runtime isolation without duplication**. While other tools copy packages into virtual environments, GVX creates **symlinks to UV's global cache** — giving you isolated runtimes in milliseconds, not seconds.
 
 ---
 
 ## Quick Start
 
 ```bash
-# Install UVG
-pip install uvg
+# Install GVX
+pip install gvx
 
 # Initialize a project
-uvg init
+gvx init
 
 # Add packages
-uvg add flask requests httpx
+gvx add flask requests httpx
 
 # Build runtime
-uvg sync
+gvx sync
 
 # Run with isolated environment
-uvg run -- python script.py
+gvx run -- python script.py
 ```
 
 ---
@@ -76,7 +76,7 @@ uvg run -- python script.py
 
 ### Prerequisites
 
-UVG requires [UV](https://docs.astral.sh/uv/) to be installed:
+GVX requires [UV](https://docs.astral.sh/uv/) to be installed:
 
 ```bash
 # Install UV (Linux/macOS)
@@ -89,26 +89,26 @@ powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
 pip install uv
 ```
 
-### Install UVG
+### Install GVX
 
 ```bash
 # From PyPI (recommended)
-pip install uvg
+pip install gvx
 
 # Or via UV
-uv pip install uvg
+uv pip install gvx
 
 # Or from source
-git clone https://github.com/swadhin/uvg.git
-cd uvg
+git clone https://github.com/swadhin/gvx.git
+cd gvx
 pip install -e .
 ```
 
 ### Verify Installation
 
 ```bash
-uvg --version
-uvg info
+gvx --version
+gvx info
 ```
 
 ---
@@ -117,7 +117,7 @@ uvg info
 
 ###  Instant Runtimes
 
-UVG creates isolated runtimes by **symlinking to UV's cache** instead of copying packages. This means:
+GVX creates isolated runtimes by **symlinking to UV's cache** instead of copying packages. This means:
 
 - **O(1) environment creation** — No waiting for package installation
 - **Zero disk duplication** — Packages stored once, shared everywhere
@@ -127,25 +127,25 @@ UVG creates isolated runtimes by **symlinking to UV's cache** instead of copying
 
 ```bash
 # List available Python versions
-uvg list
+gvx list
 
 # Switch to Python 3.11
-uvg use 3.11
+gvx use 3.11
 
 # Switch to Python 3.12
-uvg use 3.12
+gvx use 3.12
 ```
 
-UVG automatically rebuilds the runtime for the new Python version.
+GVX automatically rebuilds the runtime for the new Python version.
 
 ### 📦 Portable Lockfiles
 
 ```bash
 # Export runtime for deployment
-uvg export -o runtime.tar.gz
+gvx export -o runtime.tar.gz
 
 # Import on another machine
-uvg import runtime.tar.gz
+gvx import runtime.tar.gz
 ```
 
 Move your runtime anywhere — no re-downloading required.
@@ -156,16 +156,16 @@ First-class monorepo support with workspace commands:
 
 ```bash
 # List all projects
-uvg workspace list
+gvx workspace list
 
 # Sync all projects
-uvg workspace sync
+gvx workspace sync
 
 # Show shared dependencies
-uvg workspace shared
+gvx workspace shared
 
 # Health check all projects
-uvg workspace doctor
+gvx workspace doctor
 ```
 
 ---
@@ -182,8 +182,8 @@ uvg workspace doctor
       requests-2.34.2.dist-info/
 
 myproject/
-  uvg.lock                       # Project lockfile
-  .uvg/runtime/
+  gvx.lock                       # Project lockfile
+  .gvx/runtime/
     manifest.json
     site-packages/
       requests -> ~/.cache/uv/...  # Symlink, not copy
@@ -206,37 +206,37 @@ myproject/
 
 | Command | Description |
 |---------|-------------|
-| `uvg init [--python VERSION]` | Initialize project |
-| `uvg add PACKAGE...` | Add package(s) |
-| `uvg sync [--python VERSION]` | Build runtime from lockfile |
-| `uvg run -- COMMAND` | Run command with runtime |
-| `uvg clean` | Clean runtime directory |
-| `uvg info` | Show UVG information |
+| `gvx init [--python VERSION]` | Initialize project |
+| `gvx add PACKAGE...` | Add package(s) |
+| `gvx sync [--python VERSION]` | Build runtime from lockfile |
+| `gvx run -- COMMAND` | Run command with runtime |
+| `gvx clean` | Clean runtime directory |
+| `gvx info` | Show GVX information |
 
 ### Python Version Management
 
 | Command | Description |
 |---------|-------------|
-| `uvg use VERSION` | Switch Python version |
-| `uvg list` | List available Python versions |
+| `gvx use VERSION` | Switch Python version |
+| `gvx list` | List available Python versions |
 
 ### Export/Import
 
 | Command | Description |
 |---------|-------------|
-| `uvg export [-o FILE]` | Export runtime to tarball |
-| `uvg import FILE [--force]` | Import runtime from tarball |
+| `gvx export [-o FILE]` | Export runtime to tarball |
+| `gvx import FILE [--force]` | Import runtime from tarball |
 
 ### Workspace Commands
 
 | Command | Description |
 |---------|-------------|
-| `uvg workspace list` | List all projects |
-| `uvg workspace sync` | Sync all projects |
-| `uvg workspace stats` | Show statistics |
-| `uvg workspace graph` | Show dependency graph |
-| `uvg workspace shared` | Show shared dependencies |
-| `uvg workspace doctor` | Health check all projects |
+| `gvx workspace list` | List all projects |
+| `gvx workspace sync` | Sync all projects |
+| `gvx workspace stats` | Show statistics |
+| `gvx workspace graph` | Show dependency graph |
+| `gvx workspace shared` | Show shared dependencies |
+| `gvx workspace doctor` | Health check all projects |
 
 ---
 
@@ -253,8 +253,8 @@ myproject/
 ### Setup
 
 ```bash
-git clone https://github.com/swadhin/uvg.git
-cd uvg
+git clone https://github.com/swadhin/gvx.git
+cd gvx
 uv sync --dev
 ```
 
@@ -265,7 +265,7 @@ uv sync --dev
 uv run pytest
 
 # Run with coverage
-uv run pytest --cov=uvg
+uv run pytest --cov=gvx
 
 # Run linting
 uv run ruff check src/
@@ -293,9 +293,9 @@ MIT License — see [LICENSE](LICENSE) for details.
 
 ## Links
 
-- **Documentation**: [https://uvg.opencodehub.space](https://uvg.opencodehub.space)
-- **Source Code**: [https://github.com/swadhin/uvg](https://github.com/swadhin/uvg)
-- **Bug Tracker**: [https://github.com/swadhin/uvg/issues](https://github.com/swadhin/uvg/issues)
+- **Documentation**: [https://gvx.opencodehub.space](https://gvx.opencodehub.space)
+- **Source Code**: [https://github.com/swadhin/gvx](https://github.com/swadhin/gvx)
+- **Bug Tracker**: [https://github.com/swadhin/gvx/issues](https://github.com/swadhin/gvx/issues)
 - **UV Documentation**: [https://docs.astral.sh/uv/](https://docs.astral.sh/uv/)
 
 ---

@@ -4,9 +4,9 @@ from pathlib import Path
 
 import pytest
 
-from uvg.uv.lockfile import (
+from gvx.uv.lockfile import (
     LockfilePackage,
-    UVGLockfile,
+    GVXLockfile,
     UVLockfileParser,
 )
 
@@ -52,9 +52,9 @@ class TestLockfilePackage:
         assert pkg.wheel_url == "https://files.pythonhosted.org/packages/requests-2.31.0-py3-none-any.whl"
 
 
-class TestUVGLockfile:
+class TestGVXLockfile:
     def test_to_dict(self) -> None:
-        lockfile = UVGLockfile(
+        lockfile = GVXLockfile(
             python_version=">=3.10",
             platform="linux_x86_64",
             architecture="x86_64",
@@ -93,24 +93,24 @@ class TestUVGLockfile:
             ],
         }
 
-        lockfile = UVGLockfile.from_dict(data)
+        lockfile = GVXLockfile.from_dict(data)
         assert lockfile.python_version == ">=3.10"
         assert lockfile.fingerprint == "runtime_abc123"
         assert len(lockfile.packages) == 1
         assert lockfile.packages[0].name == "requests"
 
     def test_save_load(self, tmp_path: Path) -> None:
-        lockfile = UVGLockfile(
+        lockfile = GVXLockfile(
             python_version=">=3.10",
             platform="linux_x86_64",
             architecture="x86_64",
             packages=[LockfilePackage(name="requests", version="2.31.0")],
         )
 
-        path = tmp_path / "uvg.lock"
+        path = tmp_path / "gvx.lock"
         lockfile.save(path)
 
-        loaded = UVGLockfile.load(path)
+        loaded = GVXLockfile.load(path)
         assert loaded.python_version == ">=3.10"
         assert len(loaded.packages) == 1
         assert loaded.packages[0].name == "requests"

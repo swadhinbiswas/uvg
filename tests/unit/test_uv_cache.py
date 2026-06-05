@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from uvg.uv.cache import UVCache
+from gvx.uv.cache import UVCache
 
 
 class TestUVCache:

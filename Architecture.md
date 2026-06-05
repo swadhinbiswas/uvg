@@ -1,4 +1,4 @@
-# UVG Architecture
+# GVX Architecture
 
 **Date:** 2026-06-04
 **Status:** APPROVED
@@ -7,7 +7,7 @@
 
 ## System Overview
 
-UVG is a runtime layer that sits between UV (the resolver/installer) and the Python interpreter. It provides global storage, runtime construction, dependency intelligence, and diagnostics.
+GVX is a runtime layer that sits between UV (the resolver/installer) and the Python interpreter. It provides global storage, runtime construction, dependency intelligence, and diagnostics.
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -15,7 +15,7 @@ UVG is a runtime layer that sits between UV (the resolver/installer) and the Pyt
 └────────────────────────┬────────────────────────────────┘
                          │
 ┌────────────────────────▼────────────────────────────────┐
-│                      UVG CLI                            │
+│                      GVX CLI                            │
 │  init | sync | run | doctor | scan | stats | workspace  │
 └────────────────────────┬────────────────────────────────┘
                          │
@@ -43,12 +43,12 @@ UVG is a runtime layer that sits between UV (the resolver/installer) and the Pyt
 
 ## Core Components
 
-### 1. Store Layer (`~/.uvg/store/`)
+### 1. Store Layer (`~/.gvx/store/`)
 
 Content-addressable storage for all package artifacts.
 
 ```
-~/.uvg/store/
+~/.gvx/store/
   objects/
     sha256/
       <hash>/
@@ -76,7 +76,7 @@ Content-addressable storage for all package artifacts.
 Constructs the import path for each project.
 
 ```
-project/.uvg/runtime/
+project/.gvx/runtime/
   manifest.json        # Dependency graph + fingerprint
   site-packages/       # Symlinks to store objects
   bin/                 # Entry point scripts
@@ -84,7 +84,7 @@ project/.uvg/runtime/
 ```
 
 **Construction Flow:**
-1. Read lockfile (UV-generated or UVG-extended)
+1. Read lockfile (UV-generated or GVX-extended)
 2. Resolve dependency graph
 3. Compute runtime fingerprint
 4. Check fingerprint cache (reuse if hit)
@@ -97,9 +97,9 @@ project/.uvg/runtime/
 Dependency analysis, diagnostics, and analytics.
 
 ```
-uvg doctor    # Diagnose: conflicts, missing, broken
-uvg scan      # Scan: unused deps, import analysis
-uvg stats     # Stats: storage, dependencies, workspace
+gvx doctor    # Diagnose: conflicts, missing, broken
+gvx scan      # Scan: unused deps, import analysis
+gvx stats     # Stats: storage, dependencies, workspace
 ```
 
 **Data Sources:**
@@ -113,21 +113,21 @@ uvg stats     # Stats: storage, dependencies, workspace
 User-facing commands organized by domain.
 
 ```
-uvg init              # Initialize UVG in a project
-uvg sync              # Sync dependencies to runtime
-uvg run <cmd>         # Run command with correct runtime
-uvg add <pkg>         # Add dependency (delegates to UV)
-uvg remove <pkg>      # Remove dependency (delegates to UV)
-uvg doctor            # Diagnose dependency issues
-uvg scan              # Scan for unused/missing deps
-uvg stats             # Show storage and dependency stats
-uvg workspace sync    # Sync all workspace projects
-uvg workspace doctor  # Diagnose workspace issues
-uvg workspace graph   # Visualize workspace graph
-uvg workspace stats   # Workspace analytics
-uvg verify            # Verify runtime integrity
-uvg clean             # Clean unused store objects
-uvg info              # Show UVG configuration and status
+gvx init              # Initialize GVX in a project
+gvx sync              # Sync dependencies to runtime
+gvx run <cmd>         # Run command with correct runtime
+gvx add <pkg>         # Add dependency (delegates to UV)
+gvx remove <pkg>      # Remove dependency (delegates to UV)
+gvx doctor            # Diagnose dependency issues
+gvx scan              # Scan for unused/missing deps
+gvx stats             # Show storage and dependency stats
+gvx workspace sync    # Sync all workspace projects
+gvx workspace doctor  # Diagnose workspace issues
+gvx workspace graph   # Visualize workspace graph
+gvx workspace stats   # Workspace analytics
+gvx verify            # Verify runtime integrity
+gvx clean             # Clean unused store objects
+gvx info              # Show GVX configuration and status
 ```
 
 ---
@@ -150,12 +150,12 @@ A package is identified by a **7-tuple**:
 
 **Store Path:**
 ```
-~/.uvg/store/objects/sha256/<wheel_hash>-<abi>-<platform>-<arch>/
+~/.gvx/store/objects/sha256/<wheel_hash>-<abi>-<platform>-<arch>/
 ```
 
 **Example:**
 ```
-~/.uvg/store/objects/sha256/a4f8d2e1b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0-cp312-linux-x86_64/
+~/.gvx/store/objects/sha256/a4f8d2e1b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0-cp312-linux-x86_64/
   lib/python3.12/site-packages/numpy/
   numpy-2.3.0.dist-info/
   bin/
@@ -193,7 +193,7 @@ If two projects produce the same fingerprint, they share the same runtime artifa
 
 ---
 
-## Lockfile Design (`uvg.lock`)
+## Lockfile Design (`gvx.lock`)
 
 ```toml
 [metadata]
@@ -235,12 +235,12 @@ dependencies = ["urllib3>=1.21.1,<3", "certifi>=2017.4.17", "charset-normalizer>
 
 ## Data Flow
 
-### `uvg sync`
+### `gvx sync`
 
 ```
 1. Read pyproject.toml / requirements.txt
 2. Delegate to UV for resolution (if lockfile missing/stale)
-3. Read uvg.lock (or uv.lock)
+3. Read gvx.lock (or uv.lock)
 4. Compute runtime fingerprint
 5. Check fingerprint cache
    - HIT: Reuse existing runtime
@@ -254,7 +254,7 @@ dependencies = ["urllib3>=1.21.1,<3", "certifi>=2017.4.17", "charset-normalizer>
 9. Update fingerprint cache
 ```
 
-### `uvg run <cmd>`
+### `gvx run <cmd>`
 
 ```
 1. Read runtime manifest
@@ -263,7 +263,7 @@ dependencies = ["urllib3>=1.21.1,<3", "certifi>=2017.4.17", "charset-normalizer>
 4. Execute command with correct interpreter
 ```
 
-### `uvg doctor`
+### `gvx doctor`
 
 ```
 1. Read runtime manifest
@@ -275,7 +275,7 @@ dependencies = ["urllib3>=1.21.1,<3", "certifi>=2017.4.17", "charset-normalizer>
 7. Report findings
 ```
 
-### `uvg scan`
+### `gvx scan`
 
 ```
 1. Parse all Python files in project
@@ -304,7 +304,7 @@ dependencies = ["urllib3>=1.21.1,<3", "certifi>=2017.4.17", "charset-normalizer>
 
 ### Global Lock
 
-A global lock file (`~/.uvg/lock`) coordinates:
+A global lock file (`~/.gvx/lock`) coordinates:
 - Store object creation
 - Index updates
 - Cache invalidation
@@ -345,7 +345,7 @@ A global lock file (`~/.uvg/lock`) coordinates:
 
 ### Plugin System
 
-UVG supports plugins for:
+GVX supports plugins for:
 - Custom registry adapters
 - Custom storage backends
 - Custom intelligence rules
@@ -354,7 +354,7 @@ UVG supports plugins for:
 ### Plugin Interface
 
 ```python
-class UVGPlugin:
+class GVXPlugin:
     def name(self) -> str: ...
     def version(self) -> str: ...
     def register(self, registry: PluginRegistry) -> None: ...
@@ -363,24 +363,24 @@ class UVGPlugin:
 ### Plugin Discovery
 
 Plugins are discovered from:
-- `~/.uvg/plugins/`
+- `~/.gvx/plugins/`
 - `pyproject.toml` entry points
-- `UVG_PLUGIN_PATH` environment variable
+- `GVX_PLUGIN_PATH` environment variable
 
 ---
 
 ## Configuration
 
-### Global Configuration (`~/.uvg/config.toml`)
+### Global Configuration (`~/.gvx/config.toml`)
 
 ```toml
 [store]
-path = "~/.uvg/store"
+path = "~/.gvx/store"
 max_size = "50GB"
 gc_threshold = "80%"
 
 [cache]
-path = "~/.uvg/cache"
+path = "~/.gvx/cache"
 max_size = "10GB"
 
 [registries]
@@ -400,9 +400,9 @@ parallel_extraction = 4
 ### Project Configuration (`pyproject.toml`)
 
 ```toml
-[tool.uvg]
+[tool.gvx]
 python_version = "3.12"
-runtime_dir = ".uvg/runtime"
+runtime_dir = ".gvx/runtime"
 fingerprint_cache = true
 ```
 
@@ -415,7 +415,7 @@ fingerprint_cache = true
 3. **Runtimes are isolated**: Projects see only their dependencies
 4. **Hashes are verified**: Every object is verified on read
 5. **Operations are atomic**: Partial failures leave consistent state
-6. **Delegation is explicit**: UV handles resolution; UVG handles storage
+6. **Delegation is explicit**: UV handles resolution; GVX handles storage
 7. **Intelligence is comprehensive**: All dependency data is available
 
 ---

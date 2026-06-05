@@ -1,4 +1,4 @@
-# Feasibility Report: UVG (UV Global Runtime)
+# Feasibility Report: GVX (UV Global Runtime)
 
 **Date:** 2026-06-04
 **Status:** FEASIBLE WITH COMPROMISES
@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-UVG is technically feasible. Python projects can operate without traditional virtual environments by using content-addressable storage combined with runtime-constructed import paths. However, several hard constraints from Python's import system and the broader ecosystem must be addressed.
+GVX is technically feasible. Python projects can operate without traditional virtual environments by using content-addressable storage combined with runtime-constructed import paths. However, several hard constraints from Python's import system and the broader ecosystem must be addressed.
 
 The architecture replaces `.venv` directories with a global content-addressable store and per-project runtime manifests that construct `sys.path` at execution time. This is analogous to how Nix constructs isolated environments and how pnpm uses a global store with symlinks.
 
@@ -34,13 +34,13 @@ Traditional venv:
         pandas/
         requests/
 
-UVG model:
-  ~/.uvg/store/objects/sha256/
+GVX model:
+  ~/.gvx/store/objects/sha256/
     a4f8d2.../  (numpy-2.3.0-cp312)
     b7f9e1.../  (pandas-2.2.0-cp312)
     c3d4e5.../  (requests-2.31.0)
 
-  project-a/.uvg/runtime/
+  project-a/.gvx/runtime/
     manifest.json  (points to a4f8d2, b7f9e1, c3d4e5)
     site-packages/ (symlinks or .pth files to store)
 ```
@@ -55,7 +55,7 @@ UVG model:
 | `sitecustomize.py` | Good | Native Python | Medium |
 | Import hook (`sys.meta_path`) | Good | Native Python | High |
 
-**Recommended**: `.pth` files in a minimal runtime directory, combined with a `uvg run` wrapper that sets `PYTHONPATH` and invokes the interpreter.
+**Recommended**: `.pth` files in a minimal runtime directory, combined with a `gvx run` wrapper that sets `PYTHONPATH` and invokes the interpreter.
 
 ---
 
@@ -77,7 +77,7 @@ UVG model:
 
 **INVALID.** Console scripts and entry points are installed into `bin/` directories during wheel installation.
 
-**Reality**: UVG must reconstruct entry point scripts that invoke the correct interpreter with the correct runtime.
+**Reality**: GVX must reconstruct entry point scripts that invoke the correct interpreter with the correct runtime.
 
 ### Assumption: "C extensions will find their shared libraries"
 
@@ -87,7 +87,7 @@ UVG model:
 
 ### Assumption: "Editable installs work the same way"
 
-**INVALID.** `pip install -e` creates `.pth` files pointing to source directories. UVG must support this pattern.
+**INVALID.** `pip install -e` creates `.pth` files pointing to source directories. GVX must support this pattern.
 
 **Reality**: Editable installs are supported but require explicit manifest entries pointing to source paths.
 
@@ -99,10 +99,10 @@ UVG model:
 
 | Tool | Issue | Mitigation |
 |------|-------|------------|
-| `pip` | Expects `site-packages` layout | UVG provides compatibility layer |
-| `python -m pip` | Same as above | Use `uvg` as the interface |
+| `pip` | Expects `site-packages` layout | GVX provides compatibility layer |
+| `python -m pip` | Same as above | Use `gvx` as the interface |
 | `pytest` (some plugins) | Assumes venv structure | Most work; edge cases handled |
-| `setuptools` build isolation | Creates temp venvs | UVG can provide build environments |
+| `setuptools` build isolation | Creates temp venvs | GVX can provide build environments |
 | `mypy` | May not resolve paths | `.pth` files solve this |
 | IDEs (PyCharm, VSCode) | Detect venvs | Provide interpreter discovery |
 | `python -c "import sys; print(sys.prefix)"` | Returns different value | Document expected behavior |
@@ -134,7 +134,7 @@ UVG model:
 
 ### Compromise 1: Minimal Runtime Directory
 
-Each project gets a small `.uvg/runtime/` directory containing:
+Each project gets a small `.gvx/runtime/` directory containing:
 - `manifest.json` (dependency graph)
 - `site-packages/` (symlinks or `.pth` files)
 - `bin/` (entry point scripts)
@@ -145,7 +145,7 @@ This is not a full venv. It is a thin pointer layer to the global store.
 
 ### Compromise 2: Wrapper Script for Execution
 
-`uvg run python script.py` replaces `python script.py` for guaranteed correct import paths.
+`gvx run python script.py` replaces `python script.py` for guaranteed correct import paths.
 
 Direct `python script.py` works if the runtime directory is activated or `.pth` files are in place.
 
@@ -153,7 +153,7 @@ Direct `python script.py` works if the runtime directory is activated or `.pth` 
 
 ### Compromise 3: Build Isolation Delegation
 
-UV delegates to UV for dependency resolution and wheel acquisition. UVG does not reimplement the resolver.
+UV delegates to UV for dependency resolution and wheel acquisition. GVX does not reimplement the resolver.
 
 **Tradeoff**: Dependency on UV's resolver behavior vs. reinventing a solved problem.
 
@@ -207,7 +207,7 @@ Wheels with native extensions must be validated for ABI compatibility before bei
 ### Store Organization Enforces Isolation
 
 ```
-~/.uvg/store/objects/
+~/.gvx/store/objects/
   sha256/
     <hash-cp312-linux-x86_64>/  (numpy 2.3.0 for Python 3.12)
     <hash-cp313-linux-x86_64>/  (numpy 2.3.0 for Python 3.13)
@@ -241,7 +241,7 @@ Each object is a complete, isolated package installation.
 
 ### Storage Savings
 
-| Scenario | Traditional venv | UVG | Savings |
+| Scenario | Traditional venv | GVX | Savings |
 |----------|-----------------|-----|---------|
 | 10 projects, same deps | 5GB (500MB each) | 700MB (500MB store + 200MB runtime dirs) | 86% |
 | 10 projects, 70% overlap | 5GB | 1.8GB (500MB store + 1.3GB unique) | 64% |
@@ -249,7 +249,7 @@ Each object is a complete, isolated package installation.
 
 ### Installation Speed
 
-| Scenario | Traditional | UVG | Improvement |
+| Scenario | Traditional | GVX | Improvement |
 |----------|-------------|-----|-------------|
 | First install (100 packages) | 30s (UV) | 30s (UV) + 5s (store) | Baseline |
 | Second project (same deps) | 30s | <1s (symlinks only) | 30x |
@@ -257,7 +257,7 @@ Each object is a complete, isolated package installation.
 
 ### Runtime Startup
 
-| Scenario | Traditional | UVG | Difference |
+| Scenario | Traditional | GVX | Difference |
 |----------|-------------|-----|------------|
 | Cold start | 50ms | 80ms | +30ms (path construction) |
 | Warm start | 50ms | 55ms | +5ms (cached paths) |
@@ -305,7 +305,7 @@ Each object is a complete, isolated package installation.
 
 ## 10. Conclusion
 
-**UVG is feasible.** The Python import system is fundamentally path-based, which enables runtime construction without traditional virtual environments. Content-addressable storage eliminates duplication while maintaining isolation.
+**GVX is feasible.** The Python import system is fundamentally path-based, which enables runtime construction without traditional virtual environments. Content-addressable storage eliminates duplication while maintaining isolation.
 
 **Key enablers:**
 - Python's `sys.path` is configurable

@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from uvg.runtime.builder import RuntimeBuilder
+from gvx.runtime.builder import RuntimeBuilder
 
 
 class TestRuntimeBuilder:

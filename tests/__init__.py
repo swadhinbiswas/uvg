@@ -1,1 +1,1 @@
-"""Unit tests for UVG."""
+"""Unit tests for GVX."""

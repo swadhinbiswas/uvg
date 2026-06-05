@@ -7,7 +7,7 @@ from pathlib import Path
 
 from click.testing import CliRunner
 
-from uvg.cli.main import main
+from gvx.cli.main import main
 
 
 class TestUseCommand:
@@ -23,12 +23,12 @@ class TestUseCommand:
             assert result.exit_code == 0
 
             # Get current Python version
-            with open("uvg.lock") as f:
+            with open("gvx.lock") as f:
                 lockfile = json.load(f)
             original_version = lockfile["python_version"]
 
             # Find another available version
-            from uvg.python.manager import find_available_python_versions
+            from gvx.python.manager import find_available_python_versions
 
             versions = find_available_python_versions()
             other_version = None
@@ -44,7 +44,7 @@ class TestUseCommand:
                 assert f"Switched from Python {original_version} to {other_version}" in result.output
 
                 # Verify lockfile was updated
-                with open("uvg.lock") as f:
+                with open("gvx.lock") as f:
                     lockfile = json.load(f)
                 assert lockfile["python_version"] == other_version
 
@@ -65,7 +65,7 @@ class TestUseCommand:
             assert result.exit_code == 0
 
             # Find another available version
-            from uvg.python.manager import find_available_python_versions
+            from gvx.python.manager import find_available_python_versions
 
             versions = find_available_python_versions()
             if len(versions) > 1:
@@ -97,7 +97,7 @@ class TestUseCommand:
         with runner.isolated_filesystem(temp_dir=tmp_path):
             result = runner.invoke(main, ["use", "3.12"])
             assert result.exit_code != 0
-            assert "uvg.lock not found" in result.output
+            assert "gvx.lock not found" in result.output
 
     def test_use_no_rebuild(self, tmp_path: Path) -> None:
         """Test use command with --no-rebuild."""
@@ -112,7 +112,7 @@ class TestUseCommand:
             assert result.exit_code == 0
 
             # Find another available version
-            from uvg.python.manager import find_available_python_versions
+            from gvx.python.manager import find_available_python_versions
 
             versions = find_available_python_versions()
             if len(versions) > 1:

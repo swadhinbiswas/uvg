@@ -6,7 +6,7 @@ from pathlib import Path
 
 from click.testing import CliRunner
 
-from uvg.cli.main import main
+from gvx.cli.main import main
 
 
 class TestWorkspaceCLI:
@@ -26,13 +26,13 @@ class TestWorkspaceCLI:
         runner = CliRunner()
 
         with runner.isolated_filesystem(temp_dir=tmp_path):
-            # Create two projects with uvg.lock files
+            # Create two projects with gvx.lock files
             project_a = tmp_path / "project-a"
             project_b = tmp_path / "project-b"
             project_a.mkdir()
             project_b.mkdir()
 
-            # Create uvg.lock files manually
+            # Create gvx.lock files manually
             import json
 
             lockfile_a = {
@@ -46,9 +46,9 @@ class TestWorkspaceCLI:
                 "packages": [{"name": "flask", "version": "3.1.3"}],
             }
 
-            with open(project_a / "uvg.lock", "w") as f:
+            with open(project_a / "gvx.lock", "w") as f:
                 json.dump(lockfile_a, f)
-            with open(project_b / "uvg.lock", "w") as f:
+            with open(project_b / "gvx.lock", "w") as f:
                 json.dump(lockfile_b, f)
 
             result = runner.invoke(main, ["workspace", "list", "--root", str(tmp_path)])

@@ -1,4 +1,4 @@
-# Competitive Analysis: UVG
+# Competitive Analysis: GVX
 
 **Date:** 2026-06-04
 **Status:** COMPLETE
@@ -7,7 +7,7 @@
 
 ## Overview
 
-This document analyzes the competitive landscape for Python package management and runtime systems. UVG occupies a unique position: it is not a package manager, not a resolver, and not a venv replacement. It is a runtime layer that sits on top of UV, providing global storage, caching, diagnostics, and dependency intelligence.
+This document analyzes the competitive landscape for Python package management and runtime systems. GVX occupies a unique position: it is not a package manager, not a resolver, and not a venv replacement. It is a runtime layer that sits on top of UV, providing global storage, caching, diagnostics, and dependency intelligence.
 
 ---
 
@@ -51,7 +51,7 @@ UV is a Rust-based Python package installer and resolver. It replaces `pip` and 
 - Simplicity over intelligence
 - Compatibility over innovation
 
-### Lessons UVG Should Learn
+### Lessons GVX Should Learn
 
 - UV's resolver is excellent; delegate to it
 - UV's lock file format is well-designed; extend it
@@ -59,7 +59,7 @@ UV is a Rust-based Python package installer and resolver. It replaces `pip` and 
 - Rust is the right language for performance-critical tooling
 - CLI UX matters; UV's CLI is clean and intuitive
 
-### Lessons UVG Should Avoid
+### Lessons GVX Should Avoid
 
 - Do not compete with UV's resolver
 - Do not duplicate UV's wheel download logic
@@ -103,13 +103,13 @@ pip is the default Python package installer.
 - Simplicity over features
 - Backward compatibility over innovation
 
-### Lessons UVG Should Learn
+### Lessons GVX Should Learn
 
 - pip's ecosystem compatibility is non-negotiable
 - Wheel format is the standard; respect it
 - PEP compliance is mandatory
 
-### Lessons UVG Should Avoid
+### Lessons GVX Should Avoid
 
 - Do not implement a custom resolver
 - Do not break wheel compatibility
@@ -154,14 +154,14 @@ Poetry is a Python dependency management and packaging tool.
 - Opinionated over flexible
 - Packaging over runtime
 
-### Lessons UVG Should Learn
+### Lessons GVX Should Learn
 
 - Lock files are essential
 - Dependency visualization is valuable
 - pyproject.toml integration is expected
 - Developer experience matters
 
-### Lessons UVG Should Avoid
+### Lessons GVX Should Avoid
 
 - Do not become monolithic
 - Do not replace existing tools
@@ -204,13 +204,13 @@ Hatch is a Python project manager and build system.
 - Build system over runtime
 - Extensibility over opinionated defaults
 
-### Lessons UVG Should Learn
+### Lessons GVX Should Learn
 
 - Plugin architecture enables extensibility
 - Environment matrices are useful
 - Build system integration is important
 
-### Lessons UVG Should Avoid
+### Lessons GVX Should Avoid
 
 - Do not over-engineer the plugin system
 - Do not neglect the core experience
@@ -251,13 +251,13 @@ virtualenv creates isolated Python environments.
 - Isolation over sharing
 - Compatibility over innovation
 
-### Lessons UVG Should Learn
+### Lessons GVX Should Learn
 
 - Isolation is the primary requirement
 - Simplicity is a feature
 - Activation scripts are expected
 
-### Lessons UVG Should Avoid
+### Lessons GVX Should Avoid
 
 - Do not over-complicate isolation
 - Do not break the activation model entirely
@@ -297,13 +297,13 @@ venv is Python's built-in virtual environment module.
 - Simplicity over performance
 - Compatibility over innovation
 
-### Lessons UVG Should Learn
+### Lessons GVX Should Learn
 
 - Standard library integration is valuable
 - Simplicity is essential
 - Compatibility is non-negotiable
 
-### Lessons UVG Should Avoid
+### Lessons GVX Should Avoid
 
 - Do not require complex installation
 - Do not break standard library expectations
@@ -346,14 +346,14 @@ Conda is a cross-language package and environment manager.
 - Binary packages over wheels
 - Ecosystem over standards
 
-### Lessons UVG Should Learn
+### Lessons GVX Should Learn
 
 - Binary compatibility matters
 - Data science workflows are important
 - Environment export is valuable
 - Channel/registry abstraction is useful
 
-### Lessons UVG Should Avoid
+### Lessons GVX Should Avoid
 
 - Do not become a general package manager
 - Do not break Python packaging standards
@@ -396,7 +396,7 @@ pnpm is a fast, disk-space-efficient package manager for Node.js.
 - Strict isolation over flexibility
 - Symlinks over copies
 
-### Lessons UVG Should Learn
+### Lessons GVX Should Learn
 
 - **Content-addressable storage is the key innovation**
 - **Strict isolation prevents dependency leakage**
@@ -405,7 +405,7 @@ pnpm is a fast, disk-space-efficient package manager for Node.js.
 - **Lock files enable determinism**
 - **Global store + local symlinks is the right model**
 
-### Lessons UVG Should Avoid
+### Lessons GVX Should Avoid
 
 - Do not create overly complex symlink structures
 - Do not break tools that don't follow symlinks
@@ -450,7 +450,7 @@ Nix is a purely functional package manager.
 - Functional purity over convention
 - Isolation over convenience
 
-### Lessons UVG Should Learn
+### Lessons GVX Should Learn
 
 - **Content-addressable storage enables everything**
 - **Immutability eliminates many classes of bugs**
@@ -459,7 +459,7 @@ Nix is a purely functional package manager.
 - **Fingerprinting enables reuse**
 - **Atomic operations prevent corruption**
 
-### Lessons UVG Should Avoid
+### Lessons GVX Should Avoid
 
 - Do not require learning a new language
 - Do not break all path assumptions
@@ -505,7 +505,7 @@ Cargo is Rust's package manager and build system.
 - Safety over flexibility
 - Integrated over modular
 
-### Lessons UVG Should Learn
+### Lessons GVX Should Learn
 
 - **Error messages should be actionable**
 - **Dependency visualization is essential**
@@ -514,7 +514,7 @@ Cargo is Rust's package manager and build system.
 - **Lock files should be human-readable**
 - **Audit capabilities are expected**
 
-### Lessons UVG Should Avoid
+### Lessons GVX Should Avoid
 
 - Do not require compilation
 - Do not create language-specific assumptions
@@ -522,11 +522,11 @@ Cargo is Rust's package manager and build system.
 
 ---
 
-## 11. Synthesis: UVG's Unique Position
+## 11. Synthesis: GVX's Unique Position
 
-### What UVG Does That No One Else Does
+### What GVX Does That No One Else Does
 
-| Feature | UVG | Others |
+| Feature | GVX | Others |
 |---------|-----|--------|
 | Global content-addressable store for Python | Yes | Only pnpm/Nix (not Python) |
 | Runtime fingerprinting | Yes | None |
@@ -537,7 +537,7 @@ Cargo is Rust's package manager and build system.
 | Multi-version package coexistence | Yes | Nix (complex), pnpm (Node only) |
 | Runtime construction from manifest | Yes | None |
 
-### UVG's Competitive Moat
+### GVX's Competitive Moat
 
 1. **Storage Efficiency**: 80-90% disk savings vs. traditional venvs
 2. **Installation Speed**: <1s for projects with cached dependencies
@@ -546,7 +546,7 @@ Cargo is Rust's package manager and build system.
 5. **Security**: Hash verification, integrity validation, supply chain checks
 6. **Diagnostics**: Enterprise-grade reports and analytics
 
-### UVG's Target Users
+### GVX's Target Users
 
 1. **Enterprise Teams**: Multiple projects, shared dependencies, security requirements
 2. **Monorepos**: Workspace analytics, dependency visibility
@@ -593,7 +593,7 @@ Cargo is Rust's package manager and build system.
 
 ## 13. Conclusion
 
-UVG occupies a unique and necessary position in the Python ecosystem. No existing tool provides:
+GVX occupies a unique and necessary position in the Python ecosystem. No existing tool provides:
 
 1. Global content-addressable storage for Python packages
 2. Runtime fingerprinting and reuse
@@ -601,4 +601,4 @@ UVG occupies a unique and necessary position in the Python ecosystem. No existin
 4. Workspace analytics
 5. Storage optimization
 
-The competitive analysis confirms that UVG's architecture is sound and fills a genuine gap. The lessons from pnpm, Nix, and Cargo directly inform UVG's design, while the weaknesses of existing Python tools validate the need for UVG.
+The competitive analysis confirms that GVX's architecture is sound and fills a genuine gap. The lessons from pnpm, Nix, and Cargo directly inform GVX's design, while the weaknesses of existing Python tools validate the need for GVX.

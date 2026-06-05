@@ -41,7 +41,7 @@
 - [ ] Wheel extraction
 - [ ] Object metadata
 - [ ] SQLite index (metadata.db)
-- [ ] Store CLI (`uvg store info`, `uvg store list`)
+- [ ] Store CLI (`gvx store info`, `gvx store list`)
 - [ ] Store tests (>90% coverage)
 - [ ] Store benchmarks
 
@@ -65,14 +65,14 @@
 - [ ] Entry point script generation
 - [ ] Fingerprint algorithm
 - [ ] Fingerprint cache
-- [ ] `uvg sync` command
-- [ ] `uvg run` command
+- [ ] `gvx sync` command
+- [ ] `gvx run` command
 - [ ] Runtime verification
 - [ ] Runtime tests (>90% coverage)
 
 ### Acceptance Criteria
-- `uvg sync` creates working runtime
-- `uvg run python -c "import numpy"` works
+- `gvx sync` creates working runtime
+- `gvx run python -c "import numpy"` works
 - Fingerprint reuse demonstrated
 - All tests pass
 
@@ -86,15 +86,15 @@
 ### Deliverables
 - [ ] UV integration layer
 - [ ] Lockfile parser
-- [ ] `uvg.lock` format
+- [ ] `gvx.lock` format
 - [ ] Wheel download delegation
 - [ ] Resolution caching
-- [ ] `uvg add` / `uvg remove`
+- [ ] `gvx add` / `gvx remove`
 - [ ] Native extension validation
 - [ ] Integration tests (>90% coverage)
 
 ### Acceptance Criteria
-- `uvg add numpy` works end-to-end
+- `gvx add numpy` works end-to-end
 - Lockfile round-trips correctly
 - Native extensions validated
 - All tests pass
@@ -111,16 +111,16 @@
 - [ ] Import graph builder
 - [ ] Unused dependency detection
 - [ ] Missing dependency detection
-- [ ] `uvg doctor`
-- [ ] `uvg scan`
-- [ ] `uvg stats`
+- [ ] `gvx doctor`
+- [ ] `gvx scan`
+- [ ] `gvx stats`
 - [ ] Report generation
 - [ ] Intelligence tests (>90% coverage)
 
 ### Acceptance Criteria
-- `uvg scan` correctly identifies unused deps
-- `uvg doctor` diagnoses common issues
-- `uvg stats` shows analytics
+- `gvx scan` correctly identifies unused deps
+- `gvx doctor` diagnoses common issues
+- `gvx stats` shows analytics
 - All tests pass
 
 ---
@@ -133,10 +133,10 @@
 ### Deliverables
 - [ ] Workspace discovery
 - [ ] Workspace manifest
-- [ ] `uvg workspace sync`
-- [ ] `uvg workspace doctor`
-- [ ] `uvg workspace graph`
-- [ ] `uvg workspace stats`
+- [ ] `gvx workspace sync`
+- [ ] `gvx workspace doctor`
+- [ ] `gvx workspace graph`
+- [ ] `gvx workspace stats`
 - [ ] Cross-project analysis
 - [ ] Workspace tests (>90% coverage)
 
@@ -161,14 +161,14 @@
 - [ ] Offline mode
 - [ ] Private registry support
 - [ ] Credential management
-- [ ] `uvg verify`
+- [ ] `gvx verify`
 - [ ] Security tests (>90% coverage)
 
 ### Acceptance Criteria
 - All objects verified on read
 - Offline mode works
 - Private registries supported
-- `uvg verify` passes
+- `gvx verify` passes
 - All tests pass
 
 ---

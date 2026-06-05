@@ -19,7 +19,7 @@
 - [ ] Package identity model (7-tuple)
 - [ ] Wheel extraction and storage
 - [ ] SQLite index (metadata.db)
-- [ ] Basic CLI (`uvg init`, `uvg store info`)
+- [ ] Basic CLI (`gvx init`, `gvx store info`)
 - [ ] Test framework (pytest, coverage)
 - [ ] Benchmark framework
 
@@ -45,13 +45,13 @@
 - [ ] Entry point script generation
 - [ ] Fingerprint algorithm
 - [ ] Fingerprint cache
-- [ ] `uvg sync` command
-- [ ] `uvg run` command
+- [ ] `gvx sync` command
+- [ ] `gvx run` command
 - [ ] Runtime verification
 
 ### Success Criteria
-- `uvg sync` creates working runtime
-- `uvg run python -c "import numpy"` works
+- `gvx sync` creates working runtime
+- `gvx run python -c "import numpy"` works
 - Fingerprint reuse demonstrated
 - All tests pass
 
@@ -63,19 +63,19 @@
 - UV delegation for resolution
 - Lockfile parsing
 - Wheel download via UV
-- `uvg.lock` format
+- `gvx.lock` format
 
 ### Deliverables
 - [ ] UV integration layer
-- [ ] Lockfile parser (uv.lock + uvg.lock)
-- [ ] `uvg.lock` format specification
+- [ ] Lockfile parser (uv.lock + gvx.lock)
+- [ ] `gvx.lock` format specification
 - [ ] Wheel download delegation
 - [ ] Resolution caching
-- [ ] `uvg add` / `uvg remove` commands
+- [ ] `gvx add` / `gvx remove` commands
 - [ ] Native extension validation
 
 ### Success Criteria
-- `uvg add numpy` resolves via UV and stores in UVG
+- `gvx add numpy` resolves via UV and stores in GVX
 - Lockfile round-trips correctly
 - Native extensions validated before storage
 - All tests pass
@@ -95,15 +95,15 @@
 - [ ] Import graph builder
 - [ ] Unused dependency detection
 - [ ] Missing dependency detection
-- [ ] `uvg doctor` command
-- [ ] `uvg scan` command
-- [ ] `uvg stats` command
+- [ ] `gvx doctor` command
+- [ ] `gvx scan` command
+- [ ] `gvx stats` command
 - [ ] Report generation
 
 ### Success Criteria
-- `uvg scan` correctly identifies unused deps
-- `uvg doctor` diagnoses common issues
-- `uvg stats` shows storage analytics
+- `gvx scan` correctly identifies unused deps
+- `gvx doctor` diagnoses common issues
+- `gvx stats` shows storage analytics
 - All tests pass
 
 ---
@@ -119,10 +119,10 @@
 ### Deliverables
 - [ ] Workspace discovery
 - [ ] Workspace manifest format
-- [ ] `uvg workspace sync`
-- [ ] `uvg workspace doctor`
-- [ ] `uvg workspace graph`
-- [ ] `uvg workspace stats`
+- [ ] `gvx workspace sync`
+- [ ] `gvx workspace doctor`
+- [ ] `gvx workspace graph`
+- [ ] `gvx workspace stats`
 - [ ] Cross-project dependency analysis
 - [ ] Workspace visualization
 
@@ -151,13 +151,13 @@
 - [ ] Private registry support
 - [ ] Enterprise registry adapters
 - [ ] Credential management
-- [ ] `uvg verify` command
+- [ ] `gvx verify` command
 
 ### Success Criteria
 - All objects verified on read
 - Offline mode works in air-gapped environments
 - Private registries supported
-- `uvg verify` passes all checks
+- `gvx verify` passes all checks
 - All tests pass
 
 ---

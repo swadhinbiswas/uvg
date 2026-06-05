@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "uvg"
+name = "gvx"
 version = "0.1.0"
 description = "One Package Store. Zero Duplicate Environments."
 readme = "README.md"
@@ -11,10 +11,10 @@ license = "MIT"
 license-files = ["LICENSE"]
 requires-python = ">=3.10"
 authors = [
-    { name = "UVG Contributors", email = "uvg@users.noreply.github.com" },
+    { name = "Swadhin Biswas", email = "swadhinbiswas.cse@gmail.com" },
 ]
 maintainers = [
-    { name = "UVG Contributors", email = "uvg@users.noreply.github.com" },
+    { name = "Swadhin Biswas", email = "swadhinbiswas.cse@gmail.com" },
 ]
 keywords = [
     "package-manager",
@@ -48,14 +48,14 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://uvg.opencodehub.space"
-Documentation = "https://uvg.opencodehub.space"
-Repository = "https://github.com/swadhin/uvg"
-Changelog = "https://github.com/swadhin/uvg/blob/main/CHANGELOG.md"
-"Bug Tracker" = "https://github.com/swadhin/uvg/issues"
+Homepage = "https://gvx.opencodehub.space"
+Documentation = "https://gvx.opencodehub.space"
+Repository = "https://github.com/swadhin/gvx"
+Changelog = "https://github.com/swadhin/gvx/blob/main/CHANGELOG.md"
+"Bug Tracker" = "https://github.com/swadhin/gvx/issues"
 
 [project.scripts]
-uvg = "uvg.cli.main:main"
+gvx = "gvx.cli.main:main"
 
 [project.optional-dependencies]
 dev = [
@@ -80,7 +80,7 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/uvg"]
+packages = ["src/gvx"]
 
 [tool.hatch.build.targets.sdist]
 include = [
@@ -114,7 +114,7 @@ select = [
 ignore = []
 
 [tool.ruff.lint.isort]
-known-first-party = ["uvg"]
+known-first-party = ["gvx"]
 
 [tool.mypy]
 python_version = "3.10"
@@ -148,7 +148,7 @@ markers = [
 ]
 
 [tool.coverage.run]
-source = ["uvg"]
+source = ["gvx"]
 branch = true
 
 [tool.coverage.report]

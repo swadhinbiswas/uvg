@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from uvg.tools.executor import ToolCache, ToolSpec
-from uvg.tools.script import ScriptMetadata, ScriptParser, parse_script
+from gvx.tools.executor import ToolCache, ToolSpec
+from gvx.tools.script import ScriptMetadata, ScriptParser, parse_script
 
 
 class TestToolSpec:

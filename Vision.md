@@ -1,4 +1,4 @@
-# UVG Vision
+# GVX Vision
 
 **Date:** 2026-06-04
 **Status:** APPROVED
@@ -15,11 +15,11 @@ One Package Store. Zero Duplicate Environments.
 
 Create the runtime layer that Python never had.
 
-UVG is not a package manager.
-UVG is not a dependency resolver.
-UVG is not a replacement for UV.
+GVX is not a package manager.
+GVX is not a dependency resolver.
+GVX is not a replacement for UV.
 
-UVG is a runtime, storage, caching, diagnostics, and dependency intelligence layer built on top of UV.
+GVX is a runtime, storage, caching, diagnostics, and dependency intelligence layer built on top of UV.
 
 ---
 
@@ -39,14 +39,14 @@ Python has never had a **runtime layer** that sits between the resolver and the 
 
 ## The Solution
 
-UVG introduces:
+GVX introduces:
 
 ### 1. Global Content-Addressable Store
 
 All packages are stored once, by content hash, not by name.
 
 ```
-~/.uvg/store/objects/sha256/
+~/.gvx/store/objects/sha256/
   a4f8d2.../  (numpy-2.3.0-cp312-linux-x86_64)
   b7f9e1.../  (pandas-2.2.0-cp312-linux-x86_64)
   c3d4e5.../  (requests-2.31.0)
@@ -59,7 +59,7 @@ All packages are stored once, by content hash, not by name.
 Each project gets a minimal runtime manifest that constructs its import path from the global store. No `.venv` duplication. No `site-packages` bloat.
 
 ```
-project/.uvg/runtime/
+project/.gvx/runtime/
   manifest.json      (dependency graph)
   site-packages/     (symlinks to store)
   bin/               (entry point scripts)
@@ -75,12 +75,12 @@ runtime_8fa2d1  (numpy==2.3.0, pandas==2.2.0, requests==2.31.0, cp312, linux-x86
 
 ### 4. Dependency Intelligence
 
-UVG sees what no other tool sees: the complete dependency graph across your entire workspace.
+GVX sees what no other tool sees: the complete dependency graph across your entire workspace.
 
 ```
-uvg doctor     # Diagnose dependency issues
-uvg scan       # Detect unused and missing dependencies
-uvg stats      # Storage and dependency analytics
+gvx doctor     # Diagnose dependency issues
+gvx scan       # Detect unused and missing dependencies
+gvx stats      # Storage and dependency analytics
 ```
 
 ### 5. Workspace Mode
@@ -88,10 +88,10 @@ uvg stats      # Storage and dependency analytics
 First-class monorepo support with visibility into dependency relationships across all projects.
 
 ```
-uvg workspace sync    # Synchronize all projects
-uvg workspace doctor  # Diagnose workspace issues
-uvg workspace graph   # Visualize dependency graph
-uvg workspace stats   # Workspace analytics
+gvx workspace sync    # Synchronize all projects
+gvx workspace doctor  # Diagnose workspace issues
+gvx workspace graph   # Visualize dependency graph
+gvx workspace stats   # Workspace analytics
 ```
 
 ---
@@ -101,9 +101,9 @@ uvg workspace stats   # Workspace analytics
 ### 1. Delegate, Don't Duplicate
 
 UV resolves. UV downloads. UV generates lock files.
-UVG stores. UVG constructs runtimes. UVG diagnoses.
+GVX stores. GVX constructs runtimes. GVX diagnoses.
 
-UVG never reimplements what UV does well.
+GVX never reimplements what UV does well.
 
 ### 2. Content Over Names
 
@@ -145,7 +145,7 @@ These are not aspirations. They are requirements.
 
 ---
 
-## What UVG Is Not
+## What GVX Is Not
 
 - **Not a package manager**: UV handles resolution and installation
 - **Not a dependency resolver**: UV's resolver is excellent; we delegate
@@ -155,7 +155,7 @@ These are not aspirations. They are requirements.
 
 ---
 
-## What UVG Is
+## What GVX Is
 
 - **A global package store**: Content-addressable, immutable, shared
 - **A runtime constructor**: Builds import paths from manifests
@@ -211,13 +211,13 @@ Dependency intelligence, conflict detection, compatibility analysis.
 - 25,000+ GitHub stars
 - Core infrastructure for Python teams
 - Referenced in Python packaging discussions
-- PEP proposals influenced by UVG patterns
+- PEP proposals influenced by GVX patterns
 
 ---
 
 ## The Analogy
 
-**pnpm did for Node.js what UVG will do for Python.**
+**pnpm did for Node.js what GVX will do for Python.**
 
 pnpm introduced:
 - Global content-addressable store
@@ -225,7 +225,7 @@ pnpm introduced:
 - Disk efficiency (80-90% savings)
 - Fast installation
 
-UVG introduces:
+GVX introduces:
 - Global content-addressable store (for Python)
 - Strict dependency isolation (for Python)
 - Disk efficiency (80-90% savings)
@@ -235,7 +235,7 @@ UVG introduces:
 - Workspace analytics (new)
 - Diagnostics platform (new)
 
-**Cargo did for Rust what UVG will do for Python.**
+**Cargo did for Rust what GVX will do for Python.**
 
 Cargo introduced:
 - Excellent error messages
@@ -243,7 +243,7 @@ Cargo introduced:
 - Workspace support
 - Security features
 
-UVG introduces:
+GVX introduces:
 - Excellent error messages (for Python)
 - Dependency visualization (for Python)
 - Workspace support (for Python)
@@ -256,7 +256,7 @@ UVG introduces:
 ## Conclusion
 
 Python has never had a runtime layer.
-UVG is that layer.
+GVX is that layer.
 
 One package store. Zero duplicate environments.
 The runtime layer that Python never had.

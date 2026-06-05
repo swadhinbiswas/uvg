@@ -7,7 +7,7 @@
 
 ## Versioning Strategy
 
-UVG follows [Semantic Versioning](https://semver.org/):
+GVX follows [Semantic Versioning](https://semver.org/):
 
 ```
 MAJOR.MINOR.PATCH
@@ -73,7 +73,7 @@ git checkout -b release/v0.1.0
 ### 4. Changelog Generation
 
 ```bash
-uvg changelog generate --from v0.0.1 --to v0.1.0 > CHANGELOG.md
+gvx changelog generate --from v0.0.1 --to v0.1.0 > CHANGELOG.md
 ```
 
 ### 5. Release Tag
@@ -94,7 +94,7 @@ uv publish
 
 ```bash
 gh release create v0.1.0 \
-  --title "UVG v0.1.0" \
+  --title "GVX v0.1.0" \
   --notes-file CHANGELOG.md \
   --draft
 ```
@@ -118,8 +118,8 @@ gh release create v0.1.0 \
 ### Added
 - Content-addressable store
 - Runtime construction
-- `uvg sync` command
-- `uvg run` command
+- `gvx sync` command
+- `gvx run` command
 - Fingerprint caching
 
 ### Changed
@@ -253,16 +253,16 @@ LTS releases are supported for 24 months after GA.
 ### Announcement Template
 
 ```
-UVG v{version} is now available!
+GVX v{version} is now available!
 
 What's new:
 - {feature 1}
 - {feature 2}
 - {feature 3}
 
-Install: pip install uvg=={version}
-Docs: https://uvg.opencodehub.space/docs
-Changelog: https://github.com/uvg/uvg/releases/tag/v{version}
+Install: pip install gvx=={version}
+Docs: https://gvx.opencodehub.space/docs
+Changelog: https://github.com/gvx/gvx/releases/tag/v{version}
 ```
 
 ---

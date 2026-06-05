@@ -1,10 +1,10 @@
-# UVG Agent Workflow
+# GVX Agent Workflow
 
 ---
 
 ## Overview
 
-This document defines the workflow for all agents working on UVG. No feature may skip any phase. Every phase has entry and exit criteria.
+This document defines the workflow for all agents working on GVX. No feature may skip any phase. Every phase has entry and exit criteria.
 
 ---
 

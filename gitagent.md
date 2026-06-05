@@ -1,10 +1,10 @@
-# UVG Git Workflow
+# GVX Git Workflow
 
 ---
 
 ## Commit Message Format
 
-UVG follows [Conventional Commits](https://www.conventionalcommits.org/).
+GVX follows [Conventional Commits](https://www.conventionalcommits.org/).
 
 ```
 <type>(<scope>): <description>
@@ -229,7 +229,7 @@ Closes #123
 
 ## Semantic Versioning
 
-UVG follows [Semantic Versioning](https://semver.org/).
+GVX follows [Semantic Versioning](https://semver.org/).
 
 ### Version Bump Rules
 
@@ -281,8 +281,8 @@ git log --oneline --no-merges v0.0.1..v0.1.0 | \
 ### Added
 - Content-addressable store (feat(store))
 - Runtime construction (feat(runtime))
-- `uvg sync` command (feat(cli))
-- `uvg run` command (feat(cli))
+- `gvx sync` command (feat(cli))
+- `gvx run` command (feat(cli))
 - Fingerprint caching (feat(runtime))
 
 ### Fixed
@@ -311,8 +311,8 @@ git tag -a v0.1.0 -m "Release v0.1.0
 ## Added
 - Content-addressable store
 - Runtime construction
-- uvg sync command
-- uvg run command
+- gvx sync command
+- gvx run command
 - Fingerprint caching
 
 ## Fixed
@@ -451,10 +451,10 @@ wheels/
 venv/
 ENV/
 
-# UVG
-.uvg/runtime/
-.uvg/cache/
-*.uvg-metadata.json
+# GVX
+.gvx/runtime/
+.gvx/cache/
+*.gvx-metadata.json
 
 # IDE
 .idea/
@@ -506,7 +506,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - run: uv sync --dev
-      - run: uv run pytest --cov=uvg --cov-report=xml
+      - run: uv run pytest --cov=gvx --cov-report=xml
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run mypy .

@@ -1,10 +1,10 @@
-# UVG Engineering Skill
+# GVX Engineering Skill
 
 ---
 
 ## Engineering Philosophy
 
-UVG is infrastructure. Infrastructure must be correct, maintainable, and secure.
+GVX is infrastructure. Infrastructure must be correct, maintainable, and secure.
 
 We optimize for:
 1. **Correctness**: Code must do what it claims to do
@@ -25,7 +25,7 @@ We do not optimize for:
 
 ### 1. Delegate, Don't Duplicate
 
-Never reimplement what UV does well. UV handles resolution, downloading, and lock generation. UVG handles storage, runtime construction, and intelligence.
+Never reimplement what UV does well. UV handles resolution, downloading, and lock generation. GVX handles storage, runtime construction, and intelligence.
 
 ### 2. Content Over Names
 
@@ -145,11 +145,11 @@ from pathlib import Path
 
 import sqlite3
 
-from uvg.store.object import StoreObject
-from uvg.store.index import DatabasePool
+from gvx.store.object import StoreObject
+from gvx.store.index import DatabasePool
 
 # BAD
-from uvg.store import *
+from gvx.store import *
 import os, json, hashlib
 ```
 
@@ -179,7 +179,7 @@ def create_object(wheel_path: Path, wheel_hash: str) -> ObjectPath:
 
     Example:
         >>> store.create_object(Path("numpy-2.3.0.whl"), "sha256:a4f8d2...")
-        PosixPath("~/.uvg/store/objects/sha256/a4f8d2...")
+        PosixPath("~/.gvx/store/objects/sha256/a4f8d2...")
     """
 ```
 
@@ -225,13 +225,13 @@ class TestStoreObject:
 ```python
 class TestUVIntegration:
     def test_add_numpy(self, tmp_project: Project):
-        result = run_uvg(tmp_project, "add", "numpy==2.3.0")
+        result = run_gvx(tmp_project, "add", "numpy==2.3.0")
         assert result.returncode == 0
         assert tmp_project.runtime.has_package("numpy")
 
     def test_run_import_numpy(self, tmp_project: Project):
-        run_uvg(tmp_project, "add", "numpy==2.3.0")
-        result = run_uvg(tmp_project, "run", "python", "-c", "import numpy")
+        run_gvx(tmp_project, "add", "numpy==2.3.0")
+        result = run_gvx(tmp_project, "run", "python", "-c", "import numpy")
         assert result.returncode == 0
 ```
 
@@ -244,7 +244,7 @@ class TestUVIntegration:
 
 ```python
 def test_runtime_construction_benchmark(benchmark, tmp_project: Project):
-    benchmark(run_uvg_sync, tmp_project)
+    benchmark(run_gvx_sync, tmp_project)
     # Must complete in <2s
 ```
 

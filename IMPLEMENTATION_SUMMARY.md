@@ -1,30 +1,30 @@
-# UVG Implementation Summary
+# GVX Implementation Summary
 
 ## Overview
-UVG (UV Global) is a global package manager that uses UV's cache directly for parallel downloads and shared storage, with symlinks from project runtimes to UV's cache. It supports multi-Python versions, portable lockfiles, and CI/CD export/import.
+GVX (UV Global) is a global package manager that uses UV's cache directly for parallel downloads and shared storage, with symlinks from project runtimes to UV's cache. It supports multi-Python versions, portable lockfiles, and CI/CD export/import.
 
 ## Core Features Implemented
 
 ### 1. Global Package Storage
 - **Location**: Uses UV's cache directly (`~/.cache/uv/wheels-v6/pypi/`)
 - **Benefit**: Zero duplication - packages stored once, shared across all projects
-- **Implementation**: `src/uvg/uv/cache.py` - UVCache wrapper that finds packages in UV's cache
+- **Implementation**: `src/gvx/uv/cache.py` - UVCache wrapper that finds packages in UV's cache
 
 ### 2. Symlink-Based Runtimes
-- **Location**: Project-specific runtimes at `.uvg/runtime/`
+- **Location**: Project-specific runtimes at `.gvx/runtime/`
 - **Structure**:
   - `manifest.json` - Runtime metadata
   - `site-packages/` - Symlinks to UV cache
-- **Implementation**: `src/uvg/runtime/builder.py` - RuntimeBuilder with parallel symlink creation
+- **Implementation**: `src/gvx/runtime/builder.py` - RuntimeBuilder with parallel symlink creation
 
 ### 3. Multi-Python Version Support
-- **Switching**: `uvg use <version>` - Switch Python version for project
+- **Switching**: `gvx use <version>` - Switch Python version for project
 - **Detection**: Automatically finds available Python versions on system
 - **Rebuild**: Automatically rebuilds runtime when switching versions
-- **Implementation**: `src/uvg/python/manager.py` - Python version detection and management
+- **Implementation**: `src/gvx/python/manager.py` - Python version detection and management
 
 ### 4. Portable Lockfiles
-- **Format**: `uvg.lock` - JSON format with project dependencies only
+- **Format**: `gvx.lock` - JSON format with project dependencies only
 - **Contents**: Package names, versions, Python version
 - **Portability**: Can be moved to any machine with UV installed
 - **Implementation**: Integrated into CLI commands
@@ -32,24 +32,24 @@ UVG (UV Global) is a global package manager that uses UV's cache directly for pa
 ### 5. Parallel Downloads
 - **Delegation**: All downloads delegated to UV via `uv pip install --target`
 - **Benefits**: Parallel downloads, automatic retries, resume support, hash verification
-- **Implementation**: `src/uvg/uv/downloader.py` - UVDownloader wrapper
+- **Implementation**: `src/gvx/uv/downloader.py` - UVDownloader wrapper
 
 ### 6. Runtime Export/Import
-- **Export**: `uvg export` - Package runtime + lockfile as tarball
-- **Import**: `uvg import` - Restore runtime from tarball
+- **Export**: `gvx export` - Package runtime + lockfile as tarball
+- **Import**: `gvx import` - Restore runtime from tarball
 - **Use Case**: CI/CD pipelines, offline deployment
-- **Implementation**: `src/uvg/cli/export_import.py`
+- **Implementation**: `src/gvx/cli/export_import.py`
 
 ### 7. Workspace Support (Monorepo)
-- **Discovery**: Automatically finds projects with `uvg.lock` or `pyproject.toml`
+- **Discovery**: Automatically finds projects with `gvx.lock` or `pyproject.toml`
 - **Commands**:
-  - `uvg workspace list` - List all projects
-  - `uvg workspace sync` - Sync all projects
-  - `uvg workspace stats` - Show workspace statistics
-  - `uvg workspace graph` - Show dependency graph
-  - `uvg workspace shared` - Show shared dependencies
-  - `uvg workspace doctor` - Health check all projects
-- **Implementation**: `src/uvg/workspace/` and `src/uvg/cli/workspace.py`
+  - `gvx workspace list` - List all projects
+  - `gvx workspace sync` - Sync all projects
+  - `gvx workspace stats` - Show workspace statistics
+  - `gvx workspace graph` - Show dependency graph
+  - `gvx workspace shared` - Show shared dependencies
+  - `gvx workspace doctor` - Health check all projects
+- **Implementation**: `src/gvx/workspace/` and `src/gvx/cli/workspace.py`
 
 ### 8. Improved Error Messages
 - **Package not found**: Suggests checking spelling, links to PyPI
@@ -60,28 +60,28 @@ UVG (UV Global) is a global package manager that uses UV's cache directly for pa
 ## CLI Commands
 
 ### Basic Commands
-- `uvg init [--python VERSION]` - Initialize project
-- `uvg add PACKAGE...` - Add package(s) to project
-- `uvg sync [--python VERSION]` - Build runtime from lockfile
-- `uvg run -- COMMAND` - Run command with runtime
-- `uvg clean` - Clean runtime directory
-- `uvg info` - Show UVG and project information
+- `gvx init [--python VERSION]` - Initialize project
+- `gvx add PACKAGE...` - Add package(s) to project
+- `gvx sync [--python VERSION]` - Build runtime from lockfile
+- `gvx run -- COMMAND` - Run command with runtime
+- `gvx clean` - Clean runtime directory
+- `gvx info` - Show GVX and project information
 
 ### Python Version Management
-- `uvg use VERSION` - Switch Python version
-- `uvg list` - List available Python versions
+- `gvx use VERSION` - Switch Python version
+- `gvx list` - List available Python versions
 
 ### Export/Import
-- `uvg export [-o FILE]` - Export runtime to tarball
-- `uvg import FILE [--force]` - Import runtime from tarball
+- `gvx export [-o FILE]` - Export runtime to tarball
+- `gvx import FILE [--force]` - Import runtime from tarball
 
 ### Workspace Commands
-- `uvg workspace list [--root DIR]` - List projects
-- `uvg workspace sync [--root DIR]` - Sync all projects
-- `uvg workspace stats [--root DIR]` - Show statistics
-- `uvg workspace graph [--root DIR] [--json]` - Show dependency graph
-- `uvg workspace shared [--root DIR]` - Show shared dependencies
-- `uvg workspace doctor [--root DIR]` - Health check
+- `gvx workspace list [--root DIR]` - List projects
+- `gvx workspace sync [--root DIR]` - Sync all projects
+- `gvx workspace stats [--root DIR]` - Show statistics
+- `gvx workspace graph [--root DIR] [--json]` - Show dependency graph
+- `gvx workspace shared [--root DIR]` - Show shared dependencies
+- `gvx workspace doctor [--root DIR]` - Health check
 
 ## Technical Details
 
@@ -95,7 +95,7 @@ UVG (UV Global) is a global package manager that uses UV's cache directly for pa
 
 ### Runtime Layout
 ```
-.uvg/runtime/
+.gvx/runtime/
   manifest.json
   site-packages/
     <package-name>/ -> ~/.cache/uv/...
@@ -151,7 +151,7 @@ End-to-end testing confirmed:
 - ✅ Error messages for missing packages
 
 ## Conclusion
-UVG successfully implements a global package manager that:
+GVX successfully implements a global package manager that:
 - Uses UV's cache for zero duplication
 - Provides instant runtime creation via symlinks
 - Supports multi-Python version switching

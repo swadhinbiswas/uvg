@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from uvg.uv.config import (
+from gvx.uv.config import (
     ConflictEntry,
     ConstraintDependency,
     DependencyGroup,

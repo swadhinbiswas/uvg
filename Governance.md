@@ -7,7 +7,7 @@
 
 ## Project Structure
 
-UVG is an open-source project governed by a meritocratic model.
+GVX is an open-source project governed by a meritocratic model.
 
 ---
 
@@ -15,7 +15,7 @@ UVG is an open-source project governed by a meritocratic model.
 
 ### Contributor
 
-Anyone who contributes to UVG.
+Anyone who contributes to GVX.
 
 **Requirements:**
 - Submit a PR that is merged
@@ -59,7 +59,7 @@ A committer with decision-making authority.
 
 ### Lead Maintainer
 
-The primary decision-maker for UVG.
+The primary decision-maker for GVX.
 
 **Requirements:**
 - Maintainer for 12+ months
@@ -113,7 +113,7 @@ The lead maintainer may veto any decision. The veto can be overridden by a 3/4 m
 - Welcome new contributors
 - Resolve conflicts
 - Enforce code of conduct
-- Represent UVG externally
+- Represent GVX externally
 
 ### Operational
 
@@ -212,7 +212,7 @@ The lead maintainer makes the final decision.
 
 ### Donations
 
-UVG accepts donations through:
+GVX accepts donations through:
 - GitHub Sponsors
 - Open Collective
 
@@ -232,7 +232,7 @@ Financial reports are published quarterly.
 
 ## Trademark
 
-The UVG name and logo are trademarks of the UVG project.
+The GVX name and logo are trademarks of the GVX project.
 
 Usage guidelines:
 - May be used to refer to the project
@@ -243,7 +243,7 @@ Usage guidelines:
 
 ## License
 
-UVG is licensed under the MIT License.
+GVX is licensed under the MIT License.
 
 All contributions are licensed under the MIT License.
 

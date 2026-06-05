@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from uvg.auth.config import (
+from gvx.auth.config import (
     AuthConfig,
     AuthConfigParser,
     RegistryAuth,

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from uvg.intelligence.analyzer import ImportAnalyzer
+from gvx.intelligence.analyzer import ImportAnalyzer
 
 
 class TestImportAnalyzer:

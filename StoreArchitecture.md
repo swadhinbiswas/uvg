@@ -7,14 +7,14 @@
 
 ## Overview
 
-The UVG store is a content-addressable, immutable object store for Python package artifacts. It is the foundation upon which all runtime construction, caching, and deduplication is built.
+The GVX store is a content-addressable, immutable object store for Python package artifacts. It is the foundation upon which all runtime construction, caching, and deduplication is built.
 
 ---
 
 ## Store Layout
 
 ```
-~/.uvg/store/
+~/.gvx/store/
 │
 ├── objects/                    # Content-addressable objects
 │   └── sha256/
@@ -28,7 +28,7 @@ The UVG store is a content-addressable, immutable object store for Python packag
 │       │   │   └── <entry-point-scripts>
 │       │   ├── share/
 │       │   │   └── <package-data>
-│       │   └── .uvg-metadata.json
+│       │   └── .gvx-metadata.json
 │       │
 │       ├── <hash>-<abi>-<platform>-<arch>/
 │       │   └── ...
@@ -76,7 +76,7 @@ c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4-py3-any-any/
 
 ---
 
-## Object Metadata (`.uvg-metadata.json`)
+## Object Metadata (`.gvx-metadata.json`)
 
 Each object contains a metadata file:
 
@@ -92,7 +92,7 @@ Each object contains a metadata file:
   "wheel_filename": "numpy-2.3.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
   "wheel_hash": "sha256:a4f8d2e1b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0",
   "extracted_at": "2026-06-04T12:00:00Z",
-  "extracted_by": "uvg/0.1.0",
+  "extracted_by": "gvx/0.1.0",
   "size_bytes": 52428800,
   "file_count": 1234,
   "is_native": true,
@@ -117,7 +117,7 @@ Each object contains a metadata file:
 2. Verify wheel hash
 3. Create temporary directory in store/tmp/
 4. Extract wheel to temporary directory
-5. Write .uvg-metadata.json
+5. Write .gvx-metadata.json
 6. Validate native extensions (if applicable)
 7. Atomically rename temp directory to final name
 8. Update index (metadata.db)
@@ -128,7 +128,7 @@ Each object contains a metadata file:
 ```
 1. Lookup object by hash in index
 2. Verify object exists on disk
-3. Verify .uvg-metadata.json hash matches
+3. Verify .gvx-metadata.json hash matches
 4. Return object path
 ```
 
@@ -283,7 +283,7 @@ CREATE INDEX idx_package ON fingerprint_packages(package_name, package_version);
 ### Wheel Cache
 
 ```
-~/.uvg/store/cache/wheels/
+~/.gvx/store/cache/wheels/
   <hash>.whl              # Downloaded wheel
   <hash>.whl.meta         # Download metadata
 ```
@@ -293,7 +293,7 @@ Wheels are cached before extraction. If extraction fails, the wheel can be re-ex
 ### Manifest Cache
 
 ```
-~/.uvg/store/cache/manifests/
+~/.gvx/store/cache/manifests/
   runtime_8fa2d1c3.json   # Cached manifest
 ```
 
@@ -302,7 +302,7 @@ Manifests are cached by fingerprint. Cache hits skip manifest generation.
 ### Resolution Cache
 
 ```
-~/.uvg/store/cache/resolved/
+~/.gvx/store/cache/resolved/
   <hash>.json             # UV resolution result
 ```
 
@@ -323,7 +323,7 @@ UV resolution results are cached to avoid re-resolution for unchanged dependenci
 ### Space Accounting
 
 ```
-~/.uvg/store/
+~/.gvx/store/
   objects/    45GB    # Package objects
   index/      50MB    # SQLite databases
   cache/      5GB     # Cached wheels and manifests
@@ -402,10 +402,10 @@ def get_connection(db_path: Path) -> sqlite3.Connection:
 
 ## Store Operations
 
-### `uvg store info`
+### `gvx store info`
 
 ```
-Store: ~/.uvg/store
+Store: ~/.gvx/store
 Objects: 1,234
 Total Size: 45.2GB
 Unique Packages: 456
@@ -414,7 +414,7 @@ Native Packages: 89
 Pure Python: 367
 ```
 
-### `uvg store list`
+### `gvx store list`
 
 ```
 Package              Version   Python  ABI     Platform        Size
@@ -426,7 +426,7 @@ requests             2.31.0    3.12    py3     any             500KB
 ...
 ```
 
-### `uvg store gc`
+### `gvx store gc`
 
 ```
 Scanning store for unused objects...

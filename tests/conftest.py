@@ -1,4 +1,4 @@
-"""Shared test fixtures for UVG tests."""
+"""Shared test fixtures for GVX tests."""
 
 from __future__ import annotations
 

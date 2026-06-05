@@ -16,7 +16,7 @@ The runtime layer constructs isolated Python execution environments from the glo
 ```
 ┌──────────────┐    ┌──────────────┐    ┌──────────────┐    ┌──────────────┐
 │  Lockfile    │───▶│  Dependency  │───▶│  Fingerprint │───▶│  Cache Check │
-│  (uvg.lock)  │    │  Graph       │    │  Computation │    │  (reuse?)    │
+│  (gvx.lock)  │    │  Graph       │    │  Computation │    │  (reuse?)    │
 └──────────────┘    └──────────────┘    └──────────────┘    └──────┬───────┘
                                                                    │
                                                     ┌──────────────┼──────────────┐
@@ -40,16 +40,16 @@ The runtime layer constructs isolated Python execution environments from the glo
 ## Runtime Directory Structure
 
 ```
-project/.uvg/runtime/
+project/.gvx/runtime/
 │
 ├── manifest.json              # Dependency graph + metadata
 ├── fingerprint                # Fingerprint string
 ├── site-packages/             # Import path root
-│   ├── numpy -> ~/.uvg/store/objects/sha256/<hash>/lib/python3.12/site-packages/numpy
-│   ├── pandas -> ~/.uvg/store/objects/sha256/<hash>/lib/python3.12/site-packages/pandas
-│   ├── requests -> ~/.uvg/store/objects/sha256/<hash>/lib/python3.12/site-packages/requests
-│   ├── numpy-2.3.0.dist-info -> ~/.uvg/store/objects/sha256/<hash>/lib/python3.12/site-packages/numpy-2.3.0.dist-info
-│   └── _uvg_runtime.pth       # .pth file for dynamic path extension
+│   ├── numpy -> ~/.gvx/store/objects/sha256/<hash>/lib/python3.12/site-packages/numpy
+│   ├── pandas -> ~/.gvx/store/objects/sha256/<hash>/lib/python3.12/site-packages/pandas
+│   ├── requests -> ~/.gvx/store/objects/sha256/<hash>/lib/python3.12/site-packages/requests
+│   ├── numpy-2.3.0.dist-info -> ~/.gvx/store/objects/sha256/<hash>/lib/python3.12/site-packages/numpy-2.3.0.dist-info
+│   └── _gvx_runtime.pth       # .pth file for dynamic path extension
 │
 ├── bin/                       # Entry point scripts
 │   ├── pytest
@@ -58,7 +58,7 @@ project/.uvg/runtime/
 │
 ├── python -> /usr/bin/python3.12  # Interpreter symlink (optional)
 │
-└── uvg-runtime.json           # Runtime metadata
+└── gvx-runtime.json           # Runtime metadata
 ```
 
 ---
@@ -78,7 +78,7 @@ project/.uvg/runtime/
     "numpy": {
       "version": "2.3.0",
       "hash": "sha256:a4f8d2e1b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0",
-      "store_path": "~/.uvg/store/objects/sha256/a4f8d2...-cp312-linux-x86_64",
+      "store_path": "~/.gvx/store/objects/sha256/a4f8d2...-cp312-linux-x86_64",
       "abi": "cp312",
       "platform": "manylinux_2_17_x86_64",
       "dependencies": [],
@@ -87,7 +87,7 @@ project/.uvg/runtime/
     "pandas": {
       "version": "2.2.0",
       "hash": "sha256:b7f9e1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0",
-      "store_path": "~/.uvg/store/objects/sha256/b7f9e1...-cp312-linux-x86_64",
+      "store_path": "~/.gvx/store/objects/sha256/b7f9e1...-cp312-linux-x86_64",
       "abi": "cp312",
       "platform": "manylinux_2_17_x86_64",
       "dependencies": ["numpy>=1.26.0", "python-dateutil>=2.8.2"],
@@ -145,14 +145,14 @@ A `.pth` file in a known `site-packages` location adds paths to `sys.path`.
 
 **Implementation:**
 ```
-# _uvg_runtime.pth
-/home/user/.uvg/store/objects/sha256/a4f8d2.../lib/python3.12/site-packages
-/home/user/.uvg/store/objects/sha256/b7f9e1.../lib/python3.12/site-packages
+# _gvx_runtime.pth
+/home/user/.gvx/store/objects/sha256/a4f8d2.../lib/python3.12/site-packages
+/home/user/.gvx/store/objects/sha256/b7f9e1.../lib/python3.12/site-packages
 ```
 
 ### Method 3: `PYTHONPATH` (Wrapper)
 
-The `uvg run` wrapper sets `PYTHONPATH` before invoking Python.
+The `gvx run` wrapper sets `PYTHONPATH` before invoking Python.
 
 **Advantages:**
 - No filesystem modifications
@@ -167,7 +167,7 @@ The `uvg run` wrapper sets `PYTHONPATH` before invoking Python.
 **Implementation:**
 ```bash
 #!/bin/bash
-export PYTHONPATH="/home/user/.uvg/store/objects/sha256/a4f8d2.../lib/python3.12/site-packages:/home/user/.uvg/store/objects/sha256/b7f9e1.../lib/python3.12/site-packages:$PYTHONPATH"
+export PYTHONPATH="/home/user/.gvx/store/objects/sha256/a4f8d2.../lib/python3.12/site-packages:/home/user/.gvx/store/objects/sha256/b7f9e1.../lib/python3.12/site-packages:$PYTHONPATH"
 exec python "$@"
 ```
 
@@ -175,7 +175,7 @@ exec python "$@"
 
 1. **Primary**: Symlinks in runtime `site-packages/`
 2. **Fallback**: `.pth` files if symlinks fail
-3. **Wrapper**: `uvg run` sets `PYTHONPATH` for guaranteed correctness
+3. **Wrapper**: `gvx run` sets `PYTHONPATH` for guaranteed correctness
 
 ---
 
@@ -187,7 +187,7 @@ Entry points are reconstructed from wheel metadata.
 
 ```python
 #!/usr/bin/env python3
-"""UVG entry point script for {name}."""
+"""GVX entry point script for {name}."""
 import sys
 import os
 
@@ -253,7 +253,7 @@ def compute_fingerprint(manifest: RuntimeManifest) -> str:
 ### Fingerprint Cache
 
 ```
-~/.uvg/cache/fingerprints/
+~/.gvx/cache/fingerprints/
   runtime_8fa2d1c3/
     manifest.json          # Shared manifest
     site-packages/         # Shared symlinks
@@ -286,8 +286,8 @@ Project B: numpy==2.3.0, pandas==2.2.0, requests==2.31.0 (Python 3.12)
 
 Both compute: runtime_8fa2d1c3
 
-Project A/.uvg/runtime/ -> ~/.uvg/cache/fingerprints/runtime_8fa2d1c3/
-Project B/.uvg/runtime/ -> ~/.uvg/cache/fingerprints/runtime_8fa2d1c3/
+Project A/.gvx/runtime/ -> ~/.gvx/cache/fingerprints/runtime_8fa2d1c3/
+Project B/.gvx/runtime/ -> ~/.gvx/cache/fingerprints/runtime_8fa2d1c3/
 ```
 
 Result: Zero additional construction time. Zero additional disk usage.

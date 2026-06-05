@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from uvg.runtime.manifest import ManifestEntryPoint, ManifestPackage, RuntimeManifest
+from gvx.runtime.manifest import ManifestEntryPoint, ManifestPackage, RuntimeManifest
 
 
 class TestManifestPackage:

@@ -1,6 +1,6 @@
 """Tests for UV downloader."""
 
-from uvg.uv.downloader import UVDownloader
+from gvx.uv.downloader import UVDownloader
 
 
 class TestUVDownloader:

@@ -7,7 +7,7 @@
 
 ## Overview
 
-Security is a core feature of UVG, not an afterthought. Every layer of the system includes security controls: hash verification, integrity validation, supply chain checks, offline mode, and enterprise registry support.
+Security is a core feature of GVX, not an afterthought. Every layer of the system includes security controls: hash verification, integrity validation, supply chain checks, offline mode, and enterprise registry support.
 
 ---
 
@@ -217,7 +217,7 @@ def track_provenance(package: Package, registry: str) -> PackageProvenance:
         source_registry=registry,
         download_url=package.download_url,
         download_time=datetime.now(timezone.utc),
-        verified_by="uvg",
+        verified_by="gvx",
         hash=package.wheel_hash,
     )
 ```
@@ -282,14 +282,14 @@ def resolve_offline(lockfile: Lockfile) -> ResolutionResult:
 
 ```
 1. On internet-connected machine:
-   uvg sync --download-only
-   uvg export --format bundle > packages.tar.gz
+   gvx sync --download-only
+   gvx export --format bundle > packages.tar.gz
 
 2. Transfer packages.tar.gz to air-gapped machine
 
 3. On air-gapped machine:
-   uvg import packages.tar.gz
-   uvg sync --offline
+   gvx import packages.tar.gz
+   gvx sync --offline
 ```
 
 ---
@@ -356,7 +356,7 @@ def resolve_registry(package_name: str) -> Registry:
 ### Store Permissions
 
 ```
-~/.uvg/store/
+~/.gvx/store/
   objects/    drwx------  (700)  # Owner only
   index/      drwx------  (700)  # Owner only
   cache/      drwx------  (700)  # Owner only
@@ -366,7 +366,7 @@ def resolve_registry(package_name: str) -> Registry:
 ### Object Permissions
 
 ```
-~/.uvg/store/objects/sha256/<hash>/
+~/.gvx/store/objects/sha256/<hash>/
   dr-x------  (500)  # Read + execute only (immutable)
   files: -r--r----- (440)  # Read only
 ```
@@ -374,7 +374,7 @@ def resolve_registry(package_name: str) -> Registry:
 ### Runtime Permissions
 
 ```
-project/.uvg/runtime/
+project/.gvx/runtime/
   drwx------  (700)  # Owner only
   site-packages/  drwx------  (700)  # Owner only
   symlinks: lrwxrwxrwx  (777)  # Symlinks are world-readable by design
@@ -394,13 +394,13 @@ class CredentialStore:
         self.keyring = keyring.get_keyring()
 
     def store(self, registry: str, username: str, password: str):
-        self.keyring.set_password(f"uvg:{registry}", username, password)
+        self.keyring.set_password(f"gvx:{registry}", username, password)
 
     def retrieve(self, registry: str, username: str) -> Optional[str]:
-        return self.keyring.get_password(f"uvg:{registry}", username)
+        return self.keyring.get_password(f"gvx:{registry}", username)
 
     def delete(self, registry: str, username: str):
-        self.keyring.delete_password(f"uvg:{registry}", username)
+        self.keyring.delete_password(f"gvx:{registry}", username)
 ```
 
 ### Environment Variable Injection
@@ -409,8 +409,8 @@ class CredentialStore:
 def get_registry_credentials(registry: str) -> Credentials:
     """Get credentials from environment variables or keyring."""
     # Check environment variables first
-    username = os.environ.get(f"UVG_REGISTRY_{registry.upper()}_USER")
-    password = os.environ.get(f"UVG_REGISTRY_{registry.upper()}_PASS")
+    username = os.environ.get(f"GVX_REGISTRY_{registry.upper()}_USER")
+    password = os.environ.get(f"GVX_REGISTRY_{registry.upper()}_PASS")
 
     if username and password:
         return Credentials(username, password)
@@ -428,7 +428,7 @@ def get_registry_credentials(registry: str) -> Credentials:
 
 ## Security Commands
 
-### `uvg verify`
+### `gvx verify`
 
 ```
 Verifying runtime integrity...
@@ -442,7 +442,7 @@ Verifying runtime integrity...
 All checks passed. Runtime is secure.
 ```
 
-### `uvg scan --security`
+### `gvx scan --security`
 
 ```
 Scanning for security issues...
@@ -454,7 +454,7 @@ Scanning for security issues...
 Found 1 critical, 1 warning, 1 info
 ```
 
-### `uvg doctor --security`
+### `gvx doctor --security`
 
 ```
 Security diagnostics:

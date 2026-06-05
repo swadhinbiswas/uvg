@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from uvg.runtime.fingerprint import FingerprintInput, compute_fingerprint
+from gvx.runtime.fingerprint import FingerprintInput, compute_fingerprint
 
 
 class TestFingerprintInput:

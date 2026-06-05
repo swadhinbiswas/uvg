@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from uvg.workspace.discovery import WorkspaceDiscovery, WorkspaceManifest, WorkspaceProject
-from uvg.workspace.manager import WorkspaceManager
+from gvx.workspace.discovery import WorkspaceDiscovery, WorkspaceManifest, WorkspaceProject
+from gvx.workspace.manager import WorkspaceManager
 
 
 class TestWorkspaceProject:
@@ -14,7 +14,7 @@ class TestWorkspaceProject:
             name="my-app",
             path=tmp_path / "my-app",
         )
-        expected = tmp_path / "my-app" / ".uvg" / "runtime"
+        expected = tmp_path / "my-app" / ".gvx" / "runtime"
         assert project.runtime_dir == expected
 
 

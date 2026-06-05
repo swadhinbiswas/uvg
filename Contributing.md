@@ -1,4 +1,4 @@
-# Contributing to UVG
+# Contributing to GVX
 
 **Date:** 2026-06-04
 **Status:** APPROVED
@@ -7,7 +7,7 @@
 
 ## Code of Conduct
 
-UVG follows the [Contributor Covenant](https://www.contributor-covenant.org/).
+GVX follows the [Contributor Covenant](https://www.contributor-covenant.org/).
 
 Be respectful. Be inclusive. Be helpful.
 
@@ -18,8 +18,8 @@ Be respectful. Be inclusive. Be helpful.
 ### 1. Fork and Clone
 
 ```bash
-git clone https://github.com/your-username/uvg.git
-cd uvg
+git clone https://github.com/your-username/gvx.git
+cd gvx
 ```
 
 ### 2. Set Up Development Environment
@@ -247,7 +247,7 @@ Create a PR on GitHub with:
 ### Bug Reports
 
 Include:
-- UVG version
+- GVX version
 - Python version
 - OS
 - Steps to reproduce
@@ -266,7 +266,7 @@ Include:
 ### Security Reports
 
 Report security issues privately:
-- Email: security@uvg.dev
+- Email: security@gvx.dev
 - Do not create public issues
 
 ---
@@ -299,4 +299,4 @@ Top contributors are recognized in the README.
 
 ### Sponsorship
 
-Organizations that sponsor UVG are listed in the README.
+Organizations that sponsor GVX are listed in the README.

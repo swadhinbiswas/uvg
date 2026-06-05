@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from uvg.python.manager import (
+from gvx.python.manager import (
     find_available_python_versions,
     find_python_executables,
     get_python_executable,

@@ -12,7 +12,7 @@
 
 ### Context
 
-UVG needs a storage system that eliminates duplication while maintaining isolation between projects. Traditional virtual environments duplicate packages across projects.
+GVX needs a storage system that eliminates duplication while maintaining isolation between projects. Traditional virtual environments duplicate packages across projects.
 
 ### Decision
 
@@ -44,7 +44,7 @@ Use content-addressable storage (CAS) where objects are stored by their SHA-256 
 
 ### Context
 
-UVG needs to construct isolated import paths for each project. Options include symlinks, `.pth` files, `PYTHONPATH` injection, and import hooks.
+GVX needs to construct isolated import paths for each project. Options include symlinks, `.pth` files, `PYTHONPATH` injection, and import hooks.
 
 ### Decision
 
@@ -75,7 +75,7 @@ Use symlinks as the primary method for runtime construction. Each project's `sit
 
 ### Context
 
-UVG needs a persistent index for store objects, relationships, and fingerprints. Options include SQLite, embedded key-value stores, and in-memory databases.
+GVX needs a persistent index for store objects, relationships, and fingerprints. Options include SQLite, embedded key-value stores, and in-memory databases.
 
 ### Decision
 
@@ -107,11 +107,11 @@ Use SQLite with WAL mode for all indexing. Three database files: `metadata.db`, 
 
 ### Context
 
-UVG needs dependency resolution. UV already provides excellent resolution. Options include implementing a custom resolver, delegating to UV, or delegating to pip.
+GVX needs dependency resolution. UV already provides excellent resolution. Options include implementing a custom resolver, delegating to UV, or delegating to pip.
 
 ### Decision
 
-Delegate to UV for all dependency resolution, wheel download, and lock file generation. UVG focuses on storage, runtime construction, and intelligence.
+Delegate to UV for all dependency resolution, wheel download, and lock file generation. GVX focuses on storage, runtime construction, and intelligence.
 
 ### Consequences
 
@@ -139,7 +139,7 @@ Delegate to UV for all dependency resolution, wheel download, and lock file gene
 
 ### Context
 
-UVG needs a way to identify equivalent runtimes across projects for reuse. Options include fingerprinting, manifest comparison, and hash comparison.
+GVX needs a way to identify equivalent runtimes across projects for reuse. Options include fingerprinting, manifest comparison, and hash comparison.
 
 ### Decision
 
@@ -170,11 +170,11 @@ Compute a deterministic SHA-256 fingerprint from the runtime inputs: Python vers
 
 ### Context
 
-UVG needs a lockfile format that extends UV's lock file with runtime fingerprints and additional metadata. Options include TOML, JSON, and YAML.
+GVX needs a lockfile format that extends UV's lock file with runtime fingerprints and additional metadata. Options include TOML, JSON, and YAML.
 
 ### Decision
 
-Use TOML for `uvg.lock`. TOML is human-readable, widely supported, and consistent with `pyproject.toml`.
+Use TOML for `gvx.lock`. TOML is human-readable, widely supported, and consistent with `pyproject.toml`.
 
 ### Consequences
 
@@ -201,7 +201,7 @@ Use TOML for `uvg.lock`. TOML is human-readable, widely supported, and consisten
 
 ### Context
 
-UVG needs an implementation language. Options include Python, Rust, and Go.
+GVX needs an implementation language. Options include Python, Rust, and Go.
 
 ### Decision
 
@@ -237,11 +237,11 @@ Use Python for the initial implementation. Python provides native access to the 
 
 ### Context
 
-UVG needs to construct import paths that work with all tools and environments. No single method works universally.
+GVX needs to construct import paths that work with all tools and environments. No single method works universally.
 
 ### Decision
 
-Use a hybrid approach: symlinks as primary, `.pth` files as fallback, `PYTHONPATH` injection via `uvg run` wrapper for guaranteed correctness.
+Use a hybrid approach: symlinks as primary, `.pth` files as fallback, `PYTHONPATH` injection via `gvx run` wrapper for guaranteed correctness.
 
 ### Consequences
 
@@ -267,7 +267,7 @@ Use a hybrid approach: symlinks as primary, `.pth` files as fallback, `PYTHONPAT
 
 ### Context
 
-UVG needs to decide whether projects can see dependencies they didn't declare. Options include strict isolation (like pnpm) and permissive access (like pip).
+GVX needs to decide whether projects can see dependencies they didn't declare. Options include strict isolation (like pnpm) and permissive access (like pip).
 
 ### Decision
 
@@ -286,7 +286,7 @@ Enforce strict dependency isolation. Projects see only their declared dependenci
 - Requires import analysis to detect issues
 
 **Risks:**
-- Breaking existing projects (mitigated by `uvg scan` to detect issues)
+- Breaking existing projects (mitigated by `gvx scan` to detect issues)
 - Developer friction (mitigated by clear error messages)
 
 ---
@@ -298,7 +298,7 @@ Enforce strict dependency isolation. Projects see only their declared dependenci
 
 ### Context
 
-UVG needs to decide whether store objects can be modified after creation. Options include mutable objects (update in place) and immutable objects (replace entirely).
+GVX needs to decide whether store objects can be modified after creation. Options include mutable objects (update in place) and immutable objects (replace entirely).
 
 ### Decision
 

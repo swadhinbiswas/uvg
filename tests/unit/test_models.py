@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from uvg.core.models import PackageIdentity, Version, WheelInfo
+from gvx.core.models import PackageIdentity, Version, WheelInfo
 
 
 class TestVersion:
