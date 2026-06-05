@@ -4,7 +4,14 @@
 [![License](https://img.shields.io/pypi/l/uvg.svg)](https://github.com/swadhin/uvg/blob/main/LICENSE)
 [![Python versions](https://img.shields.io/pypi/pyversions/uvg.svg)](https://pypi.org/project/uvg/)
 [![Tests](https://github.com/swadhin/uvg/actions/workflows/ci.yml/badge.svg)](https://github.com/swadhin/uvg/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/swadhin/uvg/branch/main/graph/badge.svg)](https://codecov.io/gh/swadhin/uvg)
 [![Documentation](https://img.shields.io/badge/docs-uvg.opencodehub.space-blue)](https://uvg.opencodehub.space)
+
+<div align="center">
+
+![UVG Logo](docs/public/logo.svg)
+
+</div>
 
 **The runtime layer that Python never had.**
 
