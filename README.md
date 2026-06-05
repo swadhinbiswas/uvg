@@ -9,7 +9,7 @@
 
 <div align="center">
 
-![UVG Logo](docs/public/logo.svg)
+![UVG Logo](docs/public/logo.gif)
 
 </div>
 
