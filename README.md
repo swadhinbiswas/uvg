@@ -1,18 +1,67 @@
 # UVG
 
-**Global Package Manager for Python - Zero Duplication, Instant Runtimes**
-
+[![PyPI version](https://img.shields.io/pypi/v/uvg.svg)](https://pypi.org/project/uvg/)
+[![License](https://img.shields.io/pypi/l/uvg.svg)](https://github.com/swadhin/uvg/blob/main/LICENSE)
 [![Python versions](https://img.shields.io/pypi/pyversions/uvg.svg)](https://pypi.org/project/uvg/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Tests](https://github.com/swadhin/uvg/actions/workflows/ci.yml/badge.svg)](https://github.com/swadhin/uvg/actions/workflows/ci.yml)
+[![Documentation](https://img.shields.io/badge/docs-uvg.opencodehub.space-blue)](https://uvg.opencodehub.space)
 
-UVG is a global package manager that uses UV's cache directly for parallel downloads and shared storage, with symlinks from project runtimes to UV's cache.
+**The runtime layer that Python never had.**
 
-**Key Benefits:**
-- **Zero duplication** - Packages stored once in UV's cache, shared across all projects
-- **Instant runtimes** - Symlinks instead of copies, O(1) environment creation
-- **Multi-Python** - Switch between Python versions seamlessly
-- **Portable lockfiles** - Move projects between machines instantly
-- **CI/CD ready** - Export/import runtimes for deployment
+UVG is not a package manager. UVG is not a dependency resolver. UVG is not a replacement for [UV](https://docs.astral.sh/uv/).
+
+UVG is a **runtime, storage, caching, and dependency intelligence layer** built on top of UV.
+
+---
+
+## Highlights
+
+- **Zero duplication** — Packages stored once in UV's cache, shared across all projects
+- **Instant runtimes** — Symlinks instead of copies, O(1) environment creation
+- **Multi-Python support** — Switch between Python versions seamlessly
+- **Portable lockfiles** — Move projects between machines instantly
+- **CI/CD ready** — Export/import runtimes for deployment
+- **Workspace support** — First-class monorepo management
+- **Parallel downloads** — Leverages UV's fast download system
+- **Disk-space efficient** — With a [global cache](https://uvg.opencodehub.space/concepts/store/) for dependency deduplication
+- **Installable** via `curl` or `pip`
+- **Supports** macOS, Linux, and Windows
+
+---
+
+## Why UVG?
+
+```
+uv  0.06s
+poetry  0.99s
+pdm  1.90s
+pip-sync  4.63s
+```
+
+*Installing Trio's dependencies with a warm cache.*
+
+UVG inherits UV's speed and adds **runtime isolation without duplication**. While other tools copy packages into virtual environments, UVG creates **symlinks to UV's global cache** — giving you isolated runtimes in milliseconds, not seconds.
+
+---
+
+## Quick Start
+
+```bash
+# Install UVG
+pip install uvg
+
+# Initialize a project
+uvg init
+
+# Add packages
+uvg add flask requests httpx
+
+# Build runtime
+uvg sync
+
+# Run with isolated environment
+uvg run -- python script.py
+```
 
 ---
 
@@ -57,53 +106,17 @@ uvg info
 
 ---
 
-## Quick Start
+## Features
 
-### 1. Initialize a Project
+###  Instant Runtimes
 
-```bash
-mkdir myproject && cd myproject
-uvg init
-```
+UVG creates isolated runtimes by **symlinking to UV's cache** instead of copying packages. This means:
 
-This creates a `uvg.lock` file in your project.
+- **O(1) environment creation** — No waiting for package installation
+- **Zero disk duplication** — Packages stored once, shared everywhere
+- **Instant switching** — Change Python versions in milliseconds
 
-### 2. Add Packages
-
-```bash
-# Add single package
-uvg add requests
-
-# Add multiple packages
-uvg add flask django
-
-# Add with version constraint
-uvg add "numpy>=1.24"
-```
-
-### 3. Build Runtime
-
-```bash
-uvg sync
-```
-
-This creates a runtime at `.uvg/runtime/` with symlinks to UV's cache.
-
-### 4. Run Commands
-
-```bash
-# Run Python with project runtime
-uvg run -- python script.py
-
-# Run with specific Python version
-uvg run -- python --version
-```
-
----
-
-## Multi-Python Support
-
-### Switch Python Version
+### 🐍 Multi-Python Support
 
 ```bash
 # List available Python versions
@@ -118,27 +131,31 @@ uvg use 3.12
 
 UVG automatically rebuilds the runtime for the new Python version.
 
----
-
-## Workspace Support (Monorepo)
-
-UVG supports monorepos with multiple projects:
+### 📦 Portable Lockfiles
 
 ```bash
-# List all projects in workspace
+# Export runtime for deployment
+uvg export -o runtime.tar.gz
+
+# Import on another machine
+uvg import runtime.tar.gz
+```
+
+Move your runtime anywhere — no re-downloading required.
+
+### 🏢 Workspace Support
+
+First-class monorepo support with workspace commands:
+
+```bash
+# List all projects
 uvg workspace list
 
 # Sync all projects
 uvg workspace sync
 
-# Show workspace statistics
-uvg workspace stats
-
 # Show shared dependencies
 uvg workspace shared
-
-# Show dependency graph
-uvg workspace graph
 
 # Health check all projects
 uvg workspace doctor
@@ -146,25 +163,33 @@ uvg workspace doctor
 
 ---
 
-## CI/CD Integration
+## How It Works
 
-### Export Runtime
+### Architecture
 
-Package your runtime for deployment:
+```
+~/.cache/uv/wheels-v6/pypi/     # UV's global cache
+  requests/
+    2.34.2-py3-none-any/
+      requests/
+      requests-2.34.2.dist-info/
 
-```bash
-uvg export -o runtime.tar.gz
+myproject/
+  uvg.lock                       # Project lockfile
+  .uvg/runtime/
+    manifest.json
+    site-packages/
+      requests -> ~/.cache/uv/...  # Symlink, not copy
+      requests-2.34.2.dist-info -> ~/.cache/uv/...
 ```
 
-### Import Runtime
+### Key Design Decisions
 
-Restore runtime on another machine:
-
-```bash
-uvg import runtime.tar.gz
-```
-
-The imported runtime works instantly without re-downloading packages.
+1. **Global Cache** — Uses UV's cache directly, no duplicate storage
+2. **Symlink Runtimes** — Instant environment creation via symlinks
+3. **Parallel Downloads** — UV handles parallel downloads with retries
+4. **Case-Insensitive** — Handles different package name casings
+5. **Hash-Based Cache** — Supports UV's built wheel cache format
 
 ---
 
@@ -205,36 +230,6 @@ The imported runtime works instantly without re-downloading packages.
 | `uvg workspace graph` | Show dependency graph |
 | `uvg workspace shared` | Show shared dependencies |
 | `uvg workspace doctor` | Health check all projects |
-
----
-
-## How It Works
-
-### Architecture
-
-```
-~/.cache/uv/wheels-v6/pypi/     # UV's global cache
-  requests/
-    2.34.2-py3-none-any/
-      requests/
-      requests-2.34.2.dist-info/
-
-myproject/
-  uvg.lock                       # Project lockfile
-  .uvg/runtime/
-    manifest.json
-    site-packages/
-      requests -> ~/.cache/uv/...  # Symlink, not copy
-      requests-2.34.2.dist-info -> ~/.cache/uv/...
-```
-
-### Key Features
-
-1. **Global Cache** - Uses UV's cache directly, no duplicate storage
-2. **Symlink Runtimes** - Instant environment creation via symlinks
-3. **Parallel Downloads** - UV handles parallel downloads with retries
-4. **Case-Insensitive** - Handles different package name casings
-5. **Hash-Based Cache** - Supports UV's built wheel cache format
 
 ---
 
@@ -285,7 +280,7 @@ pip install -e .
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) for details.
+MIT License — see [LICENSE](LICENSE) for details.
 
 ---
 
@@ -295,3 +290,11 @@ MIT License - see [LICENSE](LICENSE) for details.
 - **Source Code**: [https://github.com/swadhin/uvg](https://github.com/swadhin/uvg)
 - **Bug Tracker**: [https://github.com/swadhin/uvg/issues](https://github.com/swadhin/uvg/issues)
 - **UV Documentation**: [https://docs.astral.sh/uv/](https://docs.astral.sh/uv/)
+
+---
+
+<div align="center">
+
+**Made with ❤️ by [opencodeHUB](https://opencodehub.space)**
+
+</div>
