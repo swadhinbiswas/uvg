@@ -123,7 +123,7 @@ UVG creates isolated runtimes by **symlinking to UV's cache** instead of copying
 - **Zero disk duplication** — Packages stored once, shared everywhere
 - **Instant switching** — Change Python versions in milliseconds
 
-### 🐍 Multi-Python Support
+### <img src="https://raw.githubusercontent.com/tandpfun/skill-icons/refs/heads/main/icons/Python-Dark.svg" width="20" height="20" alt="Python"> Multi-Python Support
 
 ```bash
 # List available Python versions
