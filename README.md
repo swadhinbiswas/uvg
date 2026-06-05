@@ -1,9 +1,9 @@
 # UVG
 
-[![PyPI version](https://img.shields.io/pypi/v/uvg.svg)](https://pypi.org/project/uvg/)
-[![License](https://img.shields.io/pypi/l/uvg.svg)](https://github.com/swadhin/uvg/blob/main/LICENSE)
-[![Python versions](https://img.shields.io/pypi/pyversions/uvg.svg)](https://pypi.org/project/uvg/)
-[![Tests](https://github.com/swadhin/uvg/actions/workflows/ci.yml/badge.svg)](https://github.com/swadhin/uvg/actions/workflows/ci.yml)
+[![Version](https://img.shields.io/badge/version-0.1.0-blue)](https://github.com/swadhin/uvg/releases)
+[![License](https://img.shields.io/badge/license-MIT-yellow)](https://github.com/swadhin/uvg/blob/main/LICENSE)
+[![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/downloads/)
+[![Tests](https://github.com/swadhin/uvg/actions/workflows/ci.yml/badge.svg)](https://github.com/swadhin/uvg/actions)
 [![codecov](https://codecov.io/gh/swadhin/uvg/branch/main/graph/badge.svg)](https://codecov.io/gh/swadhin/uvg)
 [![Documentation](https://img.shields.io/badge/docs-uvg.opencodehub.space-blue)](https://uvg.opencodehub.space)
 
