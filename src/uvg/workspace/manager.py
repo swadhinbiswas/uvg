@@ -11,8 +11,7 @@ from pathlib import Path
 
 from uvg.intelligence.scanner import ProjectScanner, ScanResult
 from uvg.runtime.builder import RuntimeBuilder
-from uvg.store.store import Store
-from uvg.workspace.discovery import WorkspaceDiscovery, WorkspaceProject
+from uvg.workspace.discovery import WorkspaceDiscovery
 
 
 @dataclass
@@ -52,165 +51,199 @@ class WorkspaceStats:
 
 
 class WorkspaceManager:
-    """Manages workspace-wide operations.
+    """Manages workspace operations across multiple projects."""
 
-    Provides synchronization, diagnostics, and analytics
-    across all projects in a monorepo.
-    """
-
-    def __init__(
-        self,
-        root: Path,
-        store: Store | None = None,
-    ) -> None:
+    def __init__(self, root: Path) -> None:
         """Initialize workspace manager.
 
         Args:
             root: Workspace root directory.
-            store: UVG store instance.
         """
         self.root = root
-        self.store = store
         self.discovery = WorkspaceDiscovery(root)
-        self.scanner = ProjectScanner(store=store)
+        self.scanner = ProjectScanner()
 
     def sync(self) -> WorkspaceSyncResult:
         """Synchronize all projects in the workspace.
 
         Returns:
-            WorkspaceSyncResult with sync status.
+            WorkspaceSyncResult with synchronization results.
         """
-        manifest = self.discovery.discover()
-        result = WorkspaceSyncResult(total_projects=len(manifest.projects))
+        result = WorkspaceSyncResult()
 
+        # Discover projects
+        manifest = self.discovery.discover()
+        result.total_projects = len(manifest.projects)
+
+        # Sync each project
         for project in manifest.projects:
             try:
-                self._sync_project(project)
-                result.synced_projects += 1
-                result.project_results[project.name] = "synced"
+                # Build runtime
+                builder = RuntimeBuilder(project.path, project.python_version)
+
+                # Get packages from lockfile
+                lockfile_path = project.path / "uvg.lock"
+                if lockfile_path.exists():
+                    import json
+
+                    with open(lockfile_path) as f:
+                        lockfile = json.load(f)
+
+                    packages = [(p["name"], p["version"]) for p in lockfile["packages"]]
+                    success = builder.build(packages)
+
+                    if success:
+                        result.synced_projects += 1
+                        result.project_results[project.name] = "synced"
+                    else:
+                        result.failed_projects += 1
+                        result.project_results[project.name] = "failed"
+                        result.errors.append(f"Failed to sync {project.name}")
+                else:
+                    result.project_results[project.name] = "no lockfile"
+
             except Exception as e:
                 result.failed_projects += 1
-                result.errors.append(f"{project.name}: {e}")
-                result.project_results[project.name] = f"failed: {e}"
+                result.project_results[project.name] = "error"
+                result.errors.append(f"Error syncing {project.name}: {e}")
 
         return result
-
-    def _sync_project(self, project: WorkspaceProject) -> None:
-        """Synchronize a single project.
-
-        Args:
-            project: Workspace project to sync.
-        """
-        runtime_dir = project.runtime_dir
-        manifest_path = runtime_dir / "manifest.json"
-
-        if not manifest_path.exists():
-            return
-
-        from uvg.runtime.manifest import RuntimeManifest
-
-        manifest = RuntimeManifest.load(manifest_path)
-
-        if self.store is None:
-            return
-
-        builder = RuntimeBuilder(
-            runtime_dir=runtime_dir,
-            store_path=self.store.store_path,
-        )
-
-        packages: dict[str, dict[str, object]] = {}
-        for name, pkg in manifest.packages.items():
-            packages[name] = {
-                "version": pkg.version,
-                "wheel_hash": pkg.wheel_hash,
-                "abi": pkg.abi,
-                "platform": pkg.platform,
-                "dependencies": pkg.dependencies,
-                "is_native": pkg.is_native,
-            }
-
-        entry_points: dict[str, dict[str, str]] = {}
-        for ep_name, ep in manifest.entry_points.items():
-            entry_points[ep_name] = {
-                "module": ep.module,
-                "function": ep.function,
-            }
-
-        builder.build(
-            packages=packages,
-            python_version=manifest.python_version,
-            platform=manifest.platform,
-            architecture=manifest.architecture,
-            abi=manifest.abi,
-            entry_points=entry_points if entry_points else None,
-        )
 
     def doctor(self) -> WorkspaceDoctorResult:
-        """Run health checks on all workspace projects.
+        """Run health checks on all projects.
 
         Returns:
-            WorkspaceDoctorResult with health status.
+            WorkspaceDoctorResult with health check results.
         """
-        manifest = self.discovery.discover()
-        result = WorkspaceDoctorResult(total_projects=len(manifest.projects))
+        result = WorkspaceDoctorResult()
 
+        # Discover projects
+        manifest = self.discovery.discover()
+        result.total_projects = len(manifest.projects)
+
+        # Check each project
         for project in manifest.projects:
-            scan_result = self.scanner.scan_project(
-                project_path=project.path,
-                runtime_dir=project.runtime_dir,
-            )
+            scan_result = self.scanner.scan_project(project.path)
             result.project_reports[project.name] = scan_result
 
-            if scan_result.has_issues:
-                result.unhealthy_projects += 1
-            else:
+            if scan_result.runtime_stats and scan_result.runtime_stats.is_valid:
                 result.healthy_projects += 1
-
-        shared = manifest.get_shared_dependencies()
-        for dep, projects in shared.items():
-            result.shared_dependency_issues.append(f"{dep} used by {len(projects)} projects: {', '.join(projects)}")
+            else:
+                result.unhealthy_projects += 1
 
         return result
 
-    def get_graph(self) -> dict[str, list[str]]:
-        """Get the workspace dependency graph.
-
-        Returns:
-            Dict mapping project name to its dependencies.
-        """
-        return self.discovery.get_dependency_graph()
-
     def get_stats(self) -> WorkspaceStats:
-        """Get workspace-wide statistics.
+        """Get workspace statistics.
 
         Returns:
-            WorkspaceStats with analytics.
+            WorkspaceStats with workspace statistics.
         """
-        manifest = self.discovery.discover()
-        stats = WorkspaceStats(total_projects=len(manifest.projects))
+        stats = WorkspaceStats()
 
+        # Discover projects
+        manifest = self.discovery.discover()
+        stats.total_projects = len(manifest.projects)
+
+        # Collect stats
         all_deps: set[str] = set()
-        dep_count: dict[str, int] = {}
-        python_versions: set[str] = set()
+        dep_counts: dict[str, int] = {}
 
         for project in manifest.projects:
-            if project.has_runtime:
+            # Check if runtime exists
+            runtime_dir = project.path / ".uvg" / "runtime"
+            if runtime_dir.exists():
                 stats.projects_with_runtime += 1
             else:
                 stats.projects_without_runtime += 1
 
-            if project.python_version:
-                python_versions.add(project.python_version)
+            # Get dependencies from lockfile or pyproject.toml
+            lockfile_path = project.path / "uvg.lock"
+            if lockfile_path.exists():
+                import json
 
-            for dep in project.dependencies:
-                all_deps.add(dep)
-                dep_count[dep] = dep_count.get(dep, 0) + 1
+                with open(lockfile_path) as f:
+                    lockfile = json.load(f)
 
-        stats.total_dependencies = sum(len(p.dependencies) for p in manifest.projects)
+                for pkg in lockfile["packages"]:
+                    dep_name = pkg["name"]
+                    all_deps.add(dep_name)
+                    dep_counts[dep_name] = dep_counts.get(dep_name, 0) + 1
+
+                    # Track Python versions
+                    if lockfile.get("python_version"):
+                        py_ver = lockfile["python_version"]
+                        if py_ver not in stats.python_versions:
+                            stats.python_versions.append(py_ver)
+            else:
+                # Fall back to pyproject.toml
+                pyproject_path = project.path / "pyproject.toml"
+                if pyproject_path.exists():
+                    try:
+                        import tomllib  # type: ignore[import-not-found]
+
+                        with open(pyproject_path, "rb") as f:
+                            pyproject = tomllib.load(f)
+                    except ImportError:
+                        # Python < 3.11
+                        import tomli as tomllib  # type: ignore[import-not-found]
+
+                        with open(pyproject_path, "rb") as f:
+                            pyproject = tomllib.load(f)
+
+                    project_data = pyproject.get("project", {})
+                    deps = project_data.get("dependencies", [])
+                    for dep in deps:
+                        # Parse dependency name (e.g., "requests>=2.0" -> "requests")
+                        dep_name = (
+                            dep.split(">=")[0]
+                            .split("<=")[0]
+                            .split("==")[0]
+                            .split(">")[0]
+                            .split("<")[0]
+                            .split("[")[0]
+                            .strip()
+                        )
+                        if dep_name:
+                            all_deps.add(dep_name)
+                            dep_counts[dep_name] = dep_counts.get(dep_name, 0) + 1
+
+                    # Track Python version
+                    requires_python = project_data.get("requires-python", "")
+                    if requires_python and requires_python not in stats.python_versions:
+                        stats.python_versions.append(requires_python)
+
         stats.unique_dependencies = len(all_deps)
-        stats.shared_dependencies = sum(1 for c in dep_count.values() if c > 1)
-        stats.python_versions = sorted(python_versions)
-        stats.dependency_distribution = dict(sorted(dep_count.items(), key=lambda x: x[1], reverse=True))
+        stats.total_dependencies = sum(dep_counts.values())
+        stats.shared_dependencies = sum(1 for count in dep_counts.values() if count > 1)
+        stats.dependency_distribution = dep_counts
 
         return stats
+
+    def get_graph(self) -> dict[str, list[str]]:
+        """Get workspace dependency graph.
+
+        Returns:
+            Dictionary mapping project names to their dependencies.
+        """
+        graph: dict[str, list[str]] = {}
+
+        # Discover projects
+        manifest = self.discovery.discover()
+
+        for project in manifest.projects:
+            deps: list[str] = []
+
+            # Get dependencies from lockfile
+            lockfile_path = project.path / "uvg.lock"
+            if lockfile_path.exists():
+                import json
+
+                with open(lockfile_path) as f:
+                    lockfile = json.load(f)
+
+                deps = [pkg["name"] for pkg in lockfile["packages"]]
+
+            graph[project.name] = deps
+
+        return graph

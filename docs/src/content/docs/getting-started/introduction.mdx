@@ -1,0 +1,108 @@
+---
+title: Introduction
+description: Learn what UVG is, why it exists, and how it extends UV to provide global runtime construction, content-addressable storage, and workspace-scale dependency management.
+---
+
+UVG (**UV Global Runtime**) is an open-source infrastructure layer that extends [UV](https://docs.astral.sh/uv/) to provide deterministic, reproducible, and isolated Python environments at scale.
+
+## What is UVG?
+
+UVG sits on top of UV and adds:
+
+- **Content-addressable storage** — Immutable, hash-addressed package storage with zero duplication
+- **Runtime construction** — Symlink-based import paths with deterministic fingerprinting for reuse
+- **Dependency intelligence** — AST-based import analysis, unused/missing detection, and project scanning
+- **Workspace mode** — Monorepo discovery, shared dependency tracking, and cross-project synchronization
+- **Security verification** — Hash verification, runtime integrity checks, and lockfile validation
+
+UVG delegates resolution and downloads to UV, so you get UV's blazing-fast resolver without reinventing it.
+
+## Key Features
+
+### Global Package Store
+
+Packages are stored once in a content-addressable store indexed by SHA-256 hash. Multiple projects share the same store, eliminating duplication.
+
+```
+~/.uvg/store/objects/sha256/
+  abc123-cp312-manylinux2014-x86_64/
+  def456-cp311-macosx13_0-arm64/
+  ...
+```
+
+### Deterministic Runtimes
+
+Each project gets its own isolated runtime constructed from symlinks to the global store. Runtimes are fingerprinted — if the fingerprint matches a previous build, UVG reuses it instantly.
+
+```
+project/
+  .uvg/
+    runtime/
+      manifest.json
+      site-packages/  → symlinks to store
+      bin/            → entry point scripts
+```
+
+### Package Identity
+
+UVG uses a 7-tuple identity model that captures everything needed to uniquely identify a package:
+
+```python
+(name, version, python_version, abi_tag, platform_tag, architecture, wheel_hash)
+```
+
+This means `numpy==1.26.0` for Python 3.11 on macOS ARM is a **different object** from `numpy==1.26.0` for Python 3.12 on Linux x86_64.
+
+### Workspace Mode
+
+Manage monorepos with multiple projects. UVG discovers all `pyproject.toml` files, tracks shared dependencies, and syncs runtimes across projects.
+
+```bash
+uvg workspace sync
+uvg workspace doctor
+uvg workspace graph
+uvg workspace stats
+```
+
+## How UVG Relates to UV
+
+UVG **does not replace UV**. It delegates to UV for:
+
+- Dependency resolution
+- Wheel downloads
+- Virtual environment creation (optional)
+
+UVG adds the layer above UV that handles:
+
+- Global storage and deduplication
+- Runtime construction and fingerprinting
+- Cross-project workspace management
+- Security verification and integrity checks
+
+```
+┌─────────────────────────────────────┐
+│              UVG CLI                │
+├─────────────────────────────────────┤
+│  Store │ Runtime │ Intelligence     │
+│        │         │ Workspace        │
+│        │         │ Security         │
+├─────────────────────────────────────┤
+│           UV Delegation             │
+│     (resolve, download, lock)       │
+└─────────────────────────────────────┘
+```
+
+## When to Use UVG
+
+- **Multiple projects** sharing dependencies on the same machine
+- **Monorepos** with many Python projects that need coordinated dependency management
+- **CI/CD pipelines** that need fast, reproducible environment setup
+- **Data science workflows** with large dependency trees that benefit from deduplication
+- **Edge deployments** where deterministic environments are critical
+- **Security-sensitive applications** requiring hash verification and integrity checks
+
+## Next Steps
+
+- [Installation](/getting-started/installation/) — Install UVG on your system
+- [Quick Start](/getting-started/quick-start/) — Get up and running in 5 minutes
+- [Why UVG?](/getting-started/why-uvg/) — Learn what problems UVG solves

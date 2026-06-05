@@ -1,0 +1,110 @@
+---
+title: uvg scan
+description: Analyze Python source files for import statements. Detect unused dependencies and missing imports.
+---
+
+Analyze your project's source code for import statements and detect issues.
+
+## Usage
+
+```bash
+uvg scan [options] [paths...]
+```
+
+## Options
+
+| Option | Description |
+|--------|-------------|
+| `--path {'<dir>'}` | Directory to scan (default: current) |
+| `--exclude {'<pattern>'}` | Exclude files matching pattern |
+| `--stdlib` | Include standard library modules |
+| `--json` | Output as JSON |
+
+## What It Detects
+
+### Unused Dependencies
+
+Packages declared in `pyproject.toml` but not imported in your code:
+
+```
+Unused dependencies:
+  - numpy (declared but not imported)
+  - pandas (declared but not imported)
+```
+
+### Missing Dependencies
+
+Packages imported in your code but not declared in `pyproject.toml`:
+
+```
+Missing dependencies:
+  - requests (imported in src/api.py but not declared)
+  - flask (imported in src/app.py but not declared)
+```
+
+## How It Works
+
+1. Parse all `.py` files using Python's AST
+2. Extract all import statements
+3. Resolve top-level module names
+4. Compare against declared dependencies
+5. Filter out standard library modules
+
+## Examples
+
+### Scan Current Directory
+
+```bash
+uvg scan
+```
+
+### Scan Specific Directory
+
+```bash
+uvg scan --path src/
+```
+
+### Exclude Patterns
+
+```bash
+uvg scan --exclude "tests/*" --exclude "docs/*"
+```
+
+### JSON Output
+
+```bash
+uvg scan --json
+```
+
+```json
+{
+  "files_scanned": 42,
+  "total_imports": 156,
+  "unique_modules": 23,
+  "unused": ["numpy", "pandas"],
+  "missing": ["requests", "flask"],
+  "clean": ["os", "sys", "json"]
+}
+```
+
+## Exclusions
+
+By default, UVG excludes:
+- `tests/`
+- `docs/`
+- `*.pyc`
+- `__pycache__/`
+- `.venv/`
+- `.uvg/`
+
+## Next Steps
+
+Fix detected issues:
+
+```bash
+# Remove unused
+uvg remove numpy pandas
+
+# Add missing
+uvg add requests flask
+```

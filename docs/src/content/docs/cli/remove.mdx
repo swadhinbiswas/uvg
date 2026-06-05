@@ -1,0 +1,54 @@
+---
+title: uvg remove
+description: Remove dependencies from your project and update the runtime.
+---
+
+Remove one or more dependencies from your project.
+
+## Usage
+
+```bash
+uvg remove {'<package>'} [options]
+```
+
+## Options
+
+| Option | Description |
+|--------|-------------|
+| `--dev` | Remove from development dependencies |
+
+## How It Works
+
+1. UVG removes the dependency from `pyproject.toml`
+2. UVG updates the lockfile
+3. UVG rebuilds the runtime without the removed package
+4. Store objects are **not** deleted (they may be used by other projects)
+
+## Examples
+
+### Remove a Package
+
+```bash
+uvg remove requests
+```
+
+### Remove Multiple Packages
+
+```bash
+uvg remove requests numpy
+```
+
+### Remove Development Dependency
+
+```bash
+uvg remove pytest --dev
+```
+
+## Next Steps
+
+Verify the removal:
+
+```bash
+uvg run python -c "import requests"
+# ModuleNotFoundError: No module named 'requests'
+```

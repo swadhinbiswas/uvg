@@ -1,0 +1,80 @@
+---
+title: uvg add
+description: Add dependencies to your project. UVG delegates resolution to UV and stores packages in the global content-addressable store.
+---
+
+Add one or more dependencies to your project.
+
+## Usage
+
+```bash
+uvg add {'<package>'} [options]
+```
+
+## Options
+
+| Option | Description |
+|--------|-------------|
+| `--version <spec>` | Version specifier (e.g., {'">=1.0,<2.0"'} ) |
+| `--editable` | Add as editable package |
+| `--dev` | Add as development dependency |
+
+## How It Works
+
+1. UVG delegates to UV for dependency resolution
+2. UV downloads wheels
+3. UVG stores wheels in the content-addressable store
+4. UVG updates `pyproject.toml` with the dependency
+5. UVG updates the lockfile
+
+## Examples
+
+### Add Latest Version
+
+```bash
+uvg add requests
+```
+
+### Add Specific Version
+
+```bash
+uvg add requests --version ">=2.28.0"
+```
+
+### Add Multiple Packages
+
+```bash
+uvg add requests numpy pandas
+```
+
+### Add Development Dependency
+
+```bash
+uvg add pytest --dev
+```
+
+### Add Editable Package
+
+```bash
+uvg add ./path/to/local/package --editable
+```
+
+## Version Specifiers
+
+UVG supports all PEP 440 version specifiers:
+
+| Specifier | Meaning |
+|-----------|---------|
+| `requests` | Any version |
+| `requests==2.31.0` | Exact version |
+| `requests>=2.28.0` | Minimum version |
+| `requests>=2.28.0,<3.0` | Version range |
+| `requests~=2.28.0` | Compatible release |
+
+## Next Steps
+
+After adding dependencies, sync your runtime:
+
+```bash
+uvg sync
+```

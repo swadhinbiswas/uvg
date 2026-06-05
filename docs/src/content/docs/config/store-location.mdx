@@ -1,0 +1,80 @@
+---
+title: Store Location
+description: Configure the UVG store location. Move the store to a different directory, SSD, or network mount.
+---
+
+Configure where UVG stores packages.
+
+## Default Location
+
+```
+~/.uvg/store/
+```
+
+## Custom Location
+
+### Environment Variable
+
+```bash
+export UVG_STORE=/mnt/ssd/.uvg/store
+uvg sync
+```
+
+### pyproject.toml
+
+```toml
+[tool.uvg]
+store-path = "/mnt/ssd/.uvg/store"
+```
+
+## Moving the Store
+
+### 1. Stop UVG Processes
+
+Ensure no UVG processes are running.
+
+### 2. Copy the Store
+
+```bash
+cp -a ~/.uvg/store/ /new/location/store/
+```
+
+### 3. Update Configuration
+
+```bash
+export UVG_STORE=/new/location/store
+```
+
+### 4. Verify
+
+```bash
+uvg store stats
+uvg verify --store
+```
+
+## Network Mounts
+
+UVG works with network mounts, but performance may be affected:
+
+```bash
+export UVG_STORE=/mnt/nfs/.uvg/store
+```
+
+**Recommendation:** Use local SSD for best performance.
+
+## Multiple Stores
+
+UVG uses a single store shared across all projects. Multiple stores are not supported.
+
+## Storage Requirements
+
+| Metric | Minimum | Recommended |
+|--------|---------|-------------|
+| Disk space | 1 GB | 10 GB+ |
+| File system | Any POSIX | ext4, APFS, NTFS |
+| IOPS | 100 | 1000+ (SSD) |
+
+## Next Steps
+
+- [Configuration File](/config/file/) — Full configuration reference
+- [Performance Tuning](/guides/performance/) — Optimize storage performance

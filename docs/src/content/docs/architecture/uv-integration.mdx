@@ -1,0 +1,139 @@
+---
+title: UV Integration
+description: UVG delegates to UV for dependency resolution, wheel downloads, and lockfile management. Learn how UVG extends UV's capabilities.
+---
+
+UVG delegates to UV for core package management operations while adding global storage, runtime construction, and workspace management.
+
+## Delegation Model
+
+```
+┌─────────────────────────────────────┐
+│              UVG CLI                │
+├─────────────────────────────────────┤
+│  Store │ Runtime │ Intelligence     │
+│        │         │ Workspace        │
+│        │         │ Security         │
+├─────────────────────────────────────┤
+│           UV Delegation             │
+│     (resolve, download, lock)       │
+└─────────────────────────────────────┘
+```
+
+## What UVG Delegates to UV
+
+### Dependency Resolution
+
+```python
+def resolve_dependencies(specs: list[str]) -> list[Package]:
+    # Delegate to UV
+    result = subprocess.run(
+        ["uv", "pip", "compile", "-", "--quiet"],
+        input="\n".join(specs),
+        capture_output=True,
+        text=True,
+    )
+    return parse_resolution(result.stdout)
+```
+
+### Wheel Downloads
+
+```python
+def download_wheel(package: Package) -> Path:
+    # Delegate to UV
+    result = subprocess.run(
+        ["uv", "pip", "download", f"{package.name}=={package.version}", "-d", str(temp_dir)],
+        capture_output=True,
+    )
+    return find_wheel(temp_dir)
+```
+
+### Lockfile Generation
+
+```python
+def generate_lockfile(specs: list[str]) -> UVGLockfile:
+    # Delegate to UV
+    result = subprocess.run(
+        ["uv", "pip", "compile", "-", "--generate-hashes"],
+        input="\n".join(specs),
+        capture_output=True,
+        text=True,
+    )
+    return parse_lockfile(result.stdout)
+```
+
+## What UVG Adds
+
+### Content-Addressable Store
+
+UV creates per-project virtual environments. UVG adds a global store:
+
+```
+UV:  project/.venv/lib/python3.12/site-packages/
+UVG: ~/.uvg/store/objects/sha256/
+     project/.uvg/runtime/site-packages/ → symlinks to store
+```
+
+### Runtime Construction
+
+UV creates virtual environments. UVG constructs symlink-based runtimes:
+
+```
+UV:  python -m venv .venv
+UVG: uvg sync → symlinks + fingerprint + manifest
+```
+
+### Workspace Mode
+
+UV manages one project at a time. UVG manages workspaces:
+
+```
+UV:  uv sync (one project)
+UVG: uvg workspace sync (all projects)
+```
+
+### Security Verification
+
+UV checks hashes on download. UVG verifies continuously:
+
+```
+UV:  Hash check on download
+UVG: Hash verification + runtime integrity + lockfile validation
+```
+
+## Lockfile Compatibility
+
+UVG extends UV's lockfile format:
+
+```json
+{
+  "version": 1,
+  "requires_python": ">=3.10",
+  "packages": [
+    {
+      "name": "requests",
+      "version": "2.31.0",
+      "hash": "sha256:abc123...",
+      "python_version": "3.12",
+      "abi_tag": "py3",
+      "platform_tag": "any"
+    }
+  ]
+}
+```
+
+UVG can parse standard UV lockfiles and extend them with additional metadata.
+
+## Configuration
+
+UVG respects UV's configuration:
+
+- `UV_INDEX_URL` — Package index URL
+- `UV_EXTRA_INDEX_URLS` — Additional indexes
+- `UV_CACHE_DIR` — UV cache directory
+- `~/.config/uv/uv.toml` — UV configuration file
+
+## Next Steps
+
+- [Architecture Overview](/architecture/overview/) — System architecture
+- [Migrating from UV](/guides/migration/) — Migration guide

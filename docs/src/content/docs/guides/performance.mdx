@@ -1,0 +1,151 @@
+---
+title: Performance Tuning
+description: Optimize UVG for fast cold starts, warm reuse, and minimal storage. Achieve <2s cold runtime and <200ms warm runtime.
+---
+
+Optimize UVG for maximum performance.
+
+## Performance Targets
+
+| Metric | Target |
+|--------|--------|
+| Cold runtime | < 2 seconds |
+| Warm runtime | < 200 milliseconds |
+| Storage duplication | < 5% |
+
+## Cold Start Optimization
+
+### Pre-populate the Store
+
+Download dependencies before you need them:
+
+```bash
+uvg sync
+```
+
+### Use SSD Storage
+
+The store benefits from fast disk I/O:
+
+```bash
+# Move store to SSD
+export UVG_STORE=/mnt/ssd/.uvg/store
+```
+
+### Parallel Downloads
+
+UV downloads wheels in parallel by default. Ensure your network isn't the bottleneck.
+
+## Warm Reuse Optimization
+
+### Fingerprint Matching
+
+UVG reuses runtimes when the fingerprint matches:
+
+```bash
+uvg sync  # First: 1.2s
+uvg sync  # Second: 0.05s (fingerprint match)
+```
+
+### Avoid Unnecessary Changes
+
+Don't modify `pyproject.toml` unless dependencies actually changed.
+
+### Lockfile Caching
+
+Keep the lockfile up to date to avoid re-resolution:
+
+```bash
+uvg sync  # Uses existing lockfile
+```
+
+## Storage Optimization
+
+### Deduplication
+
+UVG automatically deduplicates identical wheels:
+
+```
+Project A: requests 2.31.0 → abc123 (stored)
+Project B: requests 2.31.0 → abc123 (reused)
+```
+
+### Clean Unused Objects
+
+Remove store objects not referenced by any runtime:
+
+```bash
+uvg store list --orphaned
+uvg store remove {'<hash>'}
+```
+
+### Monitor Storage
+
+```bash
+uvg stats
+uvg workspace stats
+```
+
+## Benchmarking
+
+### Store Benchmarks
+
+```bash
+uv run pytest tests/benchmarks/ -v
+```
+
+```
+test_object_creation      13.57 μs
+test_object_lookup         8.29 μs
+test_fingerprint_computation 8.40 μs
+test_runtime_construction 398.99 μs
+```
+
+### Runtime Benchmarks
+
+Measure sync time:
+
+```bash
+time uvg sync
+```
+
+### Import Benchmarks
+
+Measure import time:
+
+```bash
+uvg run python -c "import time; start = time.time(); import numpy; print(time.time() - start)"
+```
+
+## Profiling
+
+### Verbose Output
+
+```bash
+uvg sync --verbose
+```
+
+### Store Profiling
+
+```bash
+uvg store stats
+```
+
+### Workspace Profiling
+
+```bash
+uvg workspace stats
+```
+
+## Best Practices
+
+1. **Cache the store** in CI/CD
+2. **Use workspace sync** for monorepos
+3. **Run `uvg scan`** to remove unused dependencies
+4. **Monitor storage** with `uvg stats`
+5. **Verify integrity** with `uvg verify`
+
+## Next Steps
+
+- [CI/CD Integration](/guides/ci-cd/) — Optimize your pipeline
+- [Store Architecture](/architecture/store/) — How storage works

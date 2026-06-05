@@ -1,0 +1,70 @@
+---
+title: uvg init
+description: Initialize a new UVG project with pyproject.toml and .uvg directory structure.
+---
+
+Initialize a new UVG project in the current directory.
+
+## Usage
+
+```bash
+uvg init [options]
+```
+
+## Options
+
+| Option | Description |
+|--------|-------------|
+| `--name {'<name>'}` | Project name (default: directory name) |
+| `--python {'<version>'}` | Python version requirement (default: current) |
+| `--description {'<text>'}` | Project description |
+
+## What It Creates
+
+```
+project/
+├── pyproject.toml      # Project configuration
+└── .uvg/               # UVG runtime directory
+    └── runtime/        # Will be populated on sync
+```
+
+### pyproject.toml
+
+```toml
+[project]
+name = "my-project"
+version = "0.1.0"
+description = "My UVG project"
+requires-python = ">=3.10"
+dependencies = []
+```
+
+## Examples
+
+### Basic Initialization
+
+```bash
+mkdir my-project && cd my-project
+uvg init
+```
+
+### With Custom Name
+
+```bash
+uvg init --name my-awesome-project
+```
+
+### With Python Version
+
+```bash
+uvg init --python ">=3.12"
+```
+
+## Next Steps
+
+After initialization, add dependencies:
+
+```bash
+uvg add requests
+uvg sync
+```

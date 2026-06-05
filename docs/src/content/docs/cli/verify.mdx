@@ -1,0 +1,113 @@
+---
+title: uvg verify
+description: Verify store object hashes, runtime integrity, and lockfile validity. Ensures your environment hasn't been tampered with.
+---
+
+Verify the integrity of your UVG store, runtime, and lockfile.
+
+## Usage
+
+```bash
+uvg verify [options]
+```
+
+## Options
+
+| Option | Description |
+|--------|-------------|
+| `--store` | Verify store objects only |
+| `--runtime` | Verify runtime only |
+| `--lockfile` | Verify lockfile only |
+| `--strict` | Fail on any warning |
+
+## What It Verifies
+
+### Store Verification
+
+- Recompute SHA-256 hash of each wheel file
+- Compare against stored hash
+- Detect tampering or corruption
+
+### Runtime Verification
+
+- All symlinks point to valid store objects
+- Manifest matches actual runtime state
+- Fingerprint is valid
+- Entry points are executable
+
+### Lockfile Verification
+
+- Lockfile format is valid
+- Lockfile hash matches content
+- All packages in lockfile exist in store
+
+## Examples
+
+### Full Verification
+
+```bash
+uvg verify
+```
+
+### Store Only
+
+```bash
+uvg verify --store
+```
+
+### Strict Mode
+
+```bash
+uvg verify --strict
+```
+
+## Output
+
+```
+Verification Report
+===================
+
+Store:
+  ✓ 47 objects verified
+  ✓ All hashes match
+
+Runtime:
+  ✓ Manifest valid
+  ✓ Fingerprint matches
+  ✓ 12 symlinks valid
+  ✓ 5 entry points valid
+
+Lockfile:
+  ✓ Format valid
+  ✓ Hash matches
+  ✓ All packages in store
+
+All checks passed.
+```
+
+## Exit Codes
+
+| Code | Meaning |
+|------|---------|
+| 0 | All checks passed |
+| 5 | Verification failed |
+
+## Security Implications
+
+If verification fails:
+- **Store hash mismatch** — Wheel may have been tampered with
+- **Runtime symlink broken** — Store object may have been deleted
+- **Fingerprint mismatch** — Runtime was modified outside UVG
+- **Lockfile hash mismatch** — Lockfile was modified
+
+In all cases, rebuild from scratch:
+
+```bash
+rm -rf .uvg/runtime
+uvg sync
+```
+
+## Next Steps
+
+- [Security Model](/architecture/security/) — How UVG ensures integrity
+- [uvg doctor](/cli/doctor/) — Diagnose issues

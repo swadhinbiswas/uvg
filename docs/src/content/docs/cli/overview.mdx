@@ -1,0 +1,49 @@
+---
+title: CLI Overview
+description: UVG provides 12 commands for managing packages, runtimes, workspaces, and security verification.
+---
+
+UVG's CLI provides commands for the full lifecycle of Python dependency management.
+
+## Commands
+
+| Command | Description |
+|---------|-------------|
+| [`uvg init`](/cli/init/) | Initialize a new UVG project |
+| [`uvg add`](/cli/add/) | Add dependencies to your project |
+| [`uvg remove`](/cli/remove/) | Remove dependencies from your project |
+| [`uvg sync`](/cli/sync/) | Build or update the project runtime |
+| [`uvg run`](/cli/run/) | Run a command with the UVG runtime |
+| [`uvg doctor`](/cli/doctor/) | Diagnose runtime issues |
+| [`uvg scan`](/cli/scan/) | Analyze imports for unused/missing packages |
+| [`uvg verify`](/cli/verify/) | Verify store, runtime, and lockfile integrity |
+| [`uvg stats`](/cli/stats/) | Display storage and runtime statistics |
+| [`uvg info`](/cli/info/) | Show UVG configuration and environment info |
+| [`uvg store`](/cli/store/) | Manage the content-addressable store |
+| [`uvg workspace`](/cli/workspace/) | Manage monorepo workspaces |
+
+## Global Options
+
+| Option | Description |
+|--------|-------------|
+| `--help` | Show help message |
+| `--version` | Show UVG version |
+| `--verbose` | Enable verbose output |
+| `--quiet` | Suppress non-essential output |
+
+## Exit Codes
+
+| Code | Meaning |
+|------|---------|
+| 0 | Success |
+| 1 | General error |
+| 2 | Configuration error |
+| 3 | Store error |
+| 4 | Runtime error |
+| 5 | Security verification failed |
+
+## Next Steps
+
+- [uvg init](/cli/init/) — Initialize your first project
+- [uvg add](/cli/add/) — Add dependencies
+- [uvg sync](/cli/sync/) — Build your runtime

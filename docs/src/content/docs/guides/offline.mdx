@@ -1,0 +1,95 @@
+---
+title: Offline Mode
+description: Run UVG without network access using the cached global store. Ideal for air-gapped environments and reproducible builds.
+---
+
+Run UVG without network access using the cached global store.
+
+## How It Works
+
+UVG stores all packages in `~/.uvg/store/`. Once packages are cached, UVG can construct runtimes without network access.
+
+## Setup
+
+### 1. Pre-populate the Store
+
+On a machine with network access:
+
+```bash
+uvg sync
+```
+
+This downloads all dependencies to the store.
+
+### 2. Copy the Store
+
+Copy the store to the offline machine:
+
+```bash
+tar -czf uvg-store.tar.gz ~/.uvg/store/
+# Transfer to offline machine
+tar -xzf uvg-store.tar.gz -C ~/.uvg/
+```
+
+### 3. Run Offline
+
+```bash
+uvg sync
+uvg run python script.py
+```
+
+UVG uses the local store without network access.
+
+## CI/CD Offline Mode
+
+### Pre-build Store Image
+
+Create a Docker image with the pre-populated store:
+
+```dockerfile
+FROM python:3.12
+
+# Install UV
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Install UVG
+RUN git clone https://github.com/swadhin/uvg.git && cd uvg && uv sync
+
+# Pre-populate store
+COPY pyproject.toml .
+RUN uvg sync
+
+# Copy application
+COPY . .
+
+# Run with UVG
+CMD ["uvg", "run", "python", "main.py"]
+```
+
+### Cache in CI
+
+```yaml
+- name: Cache UVG store
+  uses: actions/cache@v4
+  with:
+    path: ~/.uvg/store
+    key: uvg-store-${{ hashFiles('pyproject.toml') }}
+    restore-keys: uvg-store-
+```
+
+## Limitations
+
+- **New dependencies** require network access to download
+- **Lockfile changes** may require resolution (network)
+- **Store corruption** requires re-download
+
+## Workaround for New Dependencies
+
+1. Add dependencies on a machine with network access
+2. Sync to populate the store
+3. Copy the updated store to the offline machine
+
+## Next Steps
+
+- [Performance Tuning](/guides/performance/) — Optimize build times
+- [CI/CD Integration](/guides/ci-cd/) — Automate offline builds

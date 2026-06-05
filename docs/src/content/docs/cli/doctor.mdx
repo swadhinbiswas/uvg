@@ -1,0 +1,95 @@
+---
+title: uvg doctor
+description: Diagnose runtime issues including broken symlinks, missing packages, fingerprint mismatches, and store corruption.
+---
+
+Diagnose issues with your UVG runtime and store.
+
+## Usage
+
+```bash
+uvg doctor [options]
+```
+
+## Options
+
+| Option | Description |
+|--------|-------------|
+| `--runtime` | Check runtime only |
+| `--store` | Check store only |
+| `--verbose` | Show detailed diagnostics |
+
+## What It Checks
+
+### Runtime Checks
+
+- Broken symlinks in `site-packages/`
+- Missing packages declared in manifest
+- Fingerprint mismatch
+- Missing entry points
+- Manifest corruption
+
+### Store Checks
+
+- Missing store objects
+- Corrupted metadata
+- Index consistency
+- Orphaned objects (not referenced by any runtime)
+
+## Examples
+
+### Full Diagnostic
+
+```bash
+uvg doctor
+```
+
+### Runtime Only
+
+```bash
+uvg doctor --runtime
+```
+
+### Verbose Output
+
+```bash
+uvg doctor --verbose
+```
+
+## Output
+
+```
+Runtime Diagnostics
+===================
+✓ Manifest valid
+✓ Fingerprint matches (runtime_a1b2c3d4)
+✓ All symlinks valid (12 packages)
+✓ All entry points executable
+
+Store Diagnostics
+=================
+✓ Index consistent (47 objects)
+✓ No corrupted metadata
+✓ No orphaned objects
+
+All checks passed.
+```
+
+## Fixing Issues
+
+If issues are found, run `uvg sync` to rebuild the runtime:
+
+```bash
+uvg sync
+```
+
+For store issues, verify and repair:
+
+```bash
+uvg verify --store
+```
+
+## Next Steps
+
+- [uvg verify](/cli/verify/) — Verify integrity
+- [uvg sync](/cli/sync/) — Rebuild runtime

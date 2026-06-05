@@ -1,0 +1,122 @@
+---
+title: Workspace Setup
+description: Set up UVG workspace mode for monorepo dependency management. Discover projects, sync runtimes, and track shared dependencies.
+---
+
+Set up UVG workspace mode to manage multiple Python projects in a monorepo.
+
+## Workspace Structure
+
+```
+monorepo/
+├── pyproject.toml          # Optional workspace root
+├── services/
+│   ├── api/
+│   │   ├── pyproject.toml
+│   │   └── src/
+│   └── worker/
+│       ├── pyproject.toml
+│       └── src/
+└── libs/
+    └── shared/
+        ├── pyproject.toml
+        └── src/
+```
+
+## Setup
+
+### 1. Initialize Workspace Root (Optional)
+
+```bash
+cd monorepo
+uvg init --name monorepo
+```
+
+### 2. Initialize Projects
+
+Each project needs its own `pyproject.toml`:
+
+```bash
+cd services/api
+uvg init --name api
+
+cd ../worker
+uvg init --name worker
+
+cd ../../libs/shared
+uvg init --name shared
+```
+
+### 3. Add Dependencies
+
+```bash
+cd services/api
+uvg add requests flask ../libs/shared
+
+cd ../worker
+uvg add celery redis ../libs/shared
+```
+
+### 4. Sync Workspace
+
+```bash
+cd monorepo
+uvg workspace sync
+```
+
+This discovers all projects and syncs their runtimes.
+
+## Commands
+
+### Sync All Projects
+
+```bash
+uvg workspace sync
+```
+
+### Check All Runtimes
+
+```bash
+uvg workspace doctor
+```
+
+### View Dependency Graph
+
+```bash
+uvg workspace graph
+```
+
+### View Statistics
+
+```bash
+uvg workspace stats
+```
+
+## Shared Dependencies
+
+UVG automatically tracks shared dependencies across projects:
+
+```bash
+uvg workspace shared
+```
+
+Projects sharing the same dependency reference the same store object:
+
+```
+~/.uvg/store/objects/sha256/abc123-requests/
+  → services/api/.uvg/runtime/site-packages/requests
+  → services/worker/.uvg/runtime/site-packages/requests
+```
+
+## Best Practices
+
+1. **Use a workspace root** — Even if it has no dependencies, it provides a sync point
+2. **Name projects clearly** — Use descriptive names in `pyproject.toml`
+3. **Sync regularly** — Run `uvg workspace sync` after dependency changes
+4. **Run doctor in CI** — Verify all runtimes in your pipeline
+5. **Monitor shared deps** — Use `uvg workspace shared` to identify optimization opportunities
+
+## Next Steps
+
+- [Monorepo Use Case](/use-cases/monorepo/) — Monorepo best practices
+- [CI/CD Integration](/guides/ci-cd/) — Automate workspace management

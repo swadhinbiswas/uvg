@@ -1,0 +1,137 @@
+---
+title: uvg workspace
+description: Manage monorepo workspaces. Discover projects, sync runtimes, track shared dependencies, and visualize dependency graphs.
+---
+
+Manage monorepo workspaces with multiple Python projects.
+
+## Usage
+
+```bash
+uvg workspace {'<subcommand>'} [options]
+```
+
+## Subcommands
+
+| Subcommand | Description |
+|------------|-------------|
+| `sync` | Sync all project runtimes |
+| `doctor` | Check all project runtimes |
+| `graph` | Show dependency graph |
+| `stats` | Show workspace statistics |
+
+## Workspace Discovery
+
+UVG discovers projects by finding `pyproject.toml` files in the current directory and subdirectories:
+
+```
+monorepo/
+├── pyproject.toml          # Workspace root (optional)
+├── services/
+│   ├── api/
+│   │   └── pyproject.toml  # Project 1
+│   └── worker/
+│       └── pyproject.toml  # Project 2
+└── libs/
+    └── shared/
+        └── pyproject.toml  # Project 3
+```
+
+## Examples
+
+### Sync All Projects
+
+```bash
+uvg workspace sync
+```
+
+Syncs all discovered project runtimes in parallel.
+
+### Check All Runtimes
+
+```bash
+uvg workspace doctor
+```
+
+Checks all project runtimes for issues.
+
+### Dependency Graph
+
+```bash
+uvg workspace graph
+```
+
+```
+Workspace Dependency Graph
+==========================
+api → requests, flask, shared
+worker → celery, redis, shared
+shared → pydantic, sqlalchemy
+
+Shared dependencies:
+  - pydantic (api, worker, shared)
+  - sqlalchemy (api, shared)
+```
+
+### Workspace Statistics
+
+```bash
+uvg workspace stats
+```
+
+```
+Workspace Statistics
+====================
+Projects: 3
+Total dependencies: 47
+Shared dependencies: 12
+Storage used: 800 MB
+Deduplication ratio: 2.8x
+```
+
+## Shared Dependencies
+
+UVG tracks which dependencies are shared across projects:
+
+```bash
+uvg workspace shared
+```
+
+```
+Shared Dependencies
+===================
+requests (3 projects)
+numpy (2 projects)
+pandas (2 projects)
+pydantic (3 projects)
+```
+
+## Workspace Manifest
+
+UVG creates a `.uvg/workspace.json` manifest tracking:
+
+```json
+{
+  "version": 1,
+  "projects": [
+    {
+      "path": "services/api",
+      "name": "api",
+      "fingerprint": "runtime_a1b2c3d4",
+      "dependencies": 15
+    },
+    {
+      "path": "services/worker",
+      "name": "worker",
+      "fingerprint": "runtime_e5f6g7h8",
+      "dependencies": 12
+    }
+  ],
+  "shared_dependencies": ["requests", "pydantic", "numpy"]
+}
+```
+
+## Next Steps
+
+- [Workspace Guide](/guides/workspace/) — Detailed workspace setup
+- [Monorepo Use Case](/use-cases/monorepo/) — Monorepo best practices

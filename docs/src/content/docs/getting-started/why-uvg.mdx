@@ -1,0 +1,128 @@
+---
+title: "Why UVG?"
+description: "Understand the problems UVG solves: dependency duplication, non-deterministic environments, and workspace-scale dependency management."
+---
+
+UV was built to make Python dependency management fast. UVG was built to make it **correct, reproducible, and scalable**.
+
+## The Problem
+
+### Dependency Duplication
+
+Every Python project creates its own virtual environment with its own copy of every dependency. On a machine with 20 projects, `numpy` might be stored 20 times.
+
+```
+project-a/.venv/lib/python3.12/site-packages/numpy/    # 40 MB
+project-b/.venv/lib/python3.12/site-packages/numpy/    # 40 MB (duplicate)
+project-c/.venv/lib/python3.12/site-packages/numpy/    # 40 MB (duplicate)
+# Total: 120 MB for one package
+```
+
+### Non-Deterministic Environments
+
+Two developers running `uv sync` on the same `pyproject.toml` might get different results:
+- Different resolution order
+- Different wheel selection
+- Different file timestamps
+- Different symlink states
+
+### No Workspace Awareness
+
+UV manages one project at a time. In a monorepo with 50 projects:
+- Shared dependencies are resolved independently
+- No visibility into cross-project dependency conflicts
+- No coordinated sync or validation
+
+### No Security Verification
+
+Once a package is installed, there's no built-in way to verify:
+- The wheel hasn't been tampered with
+- The runtime matches the lockfile
+- Store objects haven't been corrupted
+
+## The UVG Solution
+
+### Content-Addressable Store
+
+Packages are stored **once** by their SHA-256 hash. All projects reference the same store objects.
+
+```
+~/.uvg/store/objects/sha256/
+  abc123-numpy-1.26.0/    # 40 MB (stored once)
+
+project-a/.uvg/runtime/site-packages/numpy → symlink to abc123
+project-b/.uvg/runtime/site-packages/numpy → symlink to abc123
+project-c/.uvg/runtime/site-packages/numpy → symlink to abc123
+# Total: 40 MB + 3 symlinks
+```
+
+**Result: 95%+ storage savings on shared dependencies.**
+
+### Deterministic Runtimes
+
+UVG computes a SHA-256 fingerprint of the entire runtime state. If the fingerprint matches a previous build, UVG reuses it instantly.
+
+```bash
+# First build: 1.2s
+uvg sync
+
+# Second build (same deps): 0.05s (fingerprint match, reuse)
+uvg sync
+```
+
+### Workspace Mode
+
+UVG discovers all projects in a workspace, tracks shared dependencies, and provides cross-project visibility.
+
+```bash
+uvg workspace sync     # Sync all projects
+uvg workspace doctor   # Check all runtimes
+uvg workspace graph    # Visualize dependency graph
+uvg workspace stats    # Storage and sharing statistics
+```
+
+### Security Verification
+
+UVG verifies integrity at every layer:
+
+```bash
+uvg verify           # Verify store, runtime, and lockfile
+uvg verify --store   # Verify store object hashes
+uvg verify --runtime # Verify runtime integrity
+```
+
+## Comparison
+
+| Feature | UV | UVG |
+|---------|----|-----|
+| Resolution | Fast resolver | Delegates to UV |
+| Storage | Per-project venv | Global content-addressable |
+| Deduplication | None | Automatic (hash-based) |
+| Runtime | Virtual environment | Symlink-based, fingerprinted |
+| Determinism | Lockfile | Lockfile + fingerprint |
+| Workspace | None | Full monorepo support |
+| Security | Hash checking | Full verification engine |
+| Intelligence | None | AST import analysis |
+
+## Who Should Use UVG?
+
+- **Teams** managing multiple Python projects
+- **Monorepos** with shared dependencies
+- **CI/CD** pipelines needing fast, reproducible setup
+- **Data science** teams with large dependency trees
+- **Security-conscious** organizations requiring integrity verification
+- **Edge deployments** needing deterministic environments
+
+## UVG is Not For You If
+
+- You have a single project with no shared dependencies
+- You don't care about storage efficiency
+- You only need basic virtual environment management
+
+In those cases, UV alone is sufficient.
+
+## Next Steps
+
+- [Installation](/getting-started/installation/) — Install UVG
+- [Quick Start](/getting-started/quick-start/) — Get up and running
+- [Package Identity](/concepts/package-identity/) — Understand the 7-tuple model

@@ -1,0 +1,94 @@
+---
+title: Installation
+description: Install UVG on your system. Multiple installation methods available.
+---
+
+UVG requires [UV](https://docs.astral.sh/uv/) to be installed first, as it delegates dependency resolution and wheel downloads to UV.
+
+## Prerequisites
+
+- **Python 3.10+**
+- **UV** — Install from [https://docs.astral.sh/uv/](https://docs.astral.sh/uv/)
+
+```bash
+# Install UV (Linux/macOS)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Install UV (Windows PowerShell)
+powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+
+# Or via pip
+pip install uv
+```
+
+## Install UVG
+
+### From PyPI (Recommended)
+
+```bash
+pip install uvg
+```
+
+### From Source
+
+```bash
+git clone https://github.com/swadhin/uvg.git
+cd uvg
+uv sync
+```
+
+### Development Install
+
+```bash
+git clone https://github.com/swadhin/uvg.git
+cd uvg
+uv sync --dev
+```
+
+## Verify Installation
+
+```bash
+uvg --version
+```
+
+You should see output like:
+
+```
+uvg, version 0.0.1
+```
+
+## Quick Start
+
+```bash
+# Initialize UVG in your project
+uvg init
+
+# Add a dependency
+uvg add requests
+
+# Sync the runtime
+uvg sync
+
+# Run with the runtime
+uvg run -- python -c "import requests; print(requests.__version__)"
+```
+
+## How It Works
+
+UVG's architecture is simple:
+
+1. **UV resolves dependencies** — Uses UV's fast SAT solver
+2. **UVG downloads wheels** — Fetches from PyPI URLs in the lockfile
+3. **UVG extracts to store** — Content-addressable storage at `~/.uvg/store`
+4. **UVG builds runtime** — Symlinks from project to store
+5. **You run** — Python imports work with zero duplication
+
+```
+UV (resolution) → UVG (download/extract) → ~/.uvg/store → symlinks → project/.uvg/runtime
+```
+
+## Next Steps
+
+- [Quick Start](/getting-started/quick-start/) — Get up and running
+- [CLI Reference](/cli/) — All available commands
+- [Architecture](/architecture/overview/) — How UVG works

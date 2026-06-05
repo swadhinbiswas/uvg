@@ -1,0 +1,185 @@
+---
+title: Tool Execution & Scripts
+description: Run tools in temporary environments and execute PEP 723 scripts with inline dependencies.
+---
+
+UVG supports running tools in isolated temporary environments and executing scripts with inline dependency metadata.
+
+## Tool Execution (uvx-style)
+
+Run tools without installing them globally:
+
+```bash
+uvg run --with ruff ruff check .
+uvg run --with black black .
+uvg run --with pytest pytest tests/
+```
+
+### Multiple Tools
+
+Run with multiple tools installed:
+
+```bash
+uvg run --with ruff --with black ruff check .
+```
+
+### Pinned Versions
+
+Pin tool versions for reproducibility:
+
+```bash
+uvg run --with ruff==0.4.0 ruff check .
+uvg run --with pytest==8.0.0 pytest tests/
+```
+
+### Tool Caching
+
+Tools are cached by default. The same tool combination is reused across runs:
+
+```bash
+# First run: installs ruff
+uvg run --with ruff ruff check .
+
+# Second run: uses cached ruff
+uvg run --with ruff ruff check .
+```
+
+### Clear Tool Cache
+
+Clear all cached tool environments:
+
+```bash
+uvg tools clear
+```
+
+## PEP 723 Scripts
+
+Run Python scripts with inline dependency metadata:
+
+```bash
+uvg run --script my_script.py
+```
+
+### Script Format
+
+Scripts declare dependencies in a special comment block:
+
+```python
+# /// script
+# dependencies = [
+#     "requests>=2.0",
+#     "click>=8.0",
+# ]
+# requires-python = ">=3.10"
+# description = "Fetch and process data"
+# ///
+
+import requests
+import click
+
+@click.command()
+def main():
+    response = requests.get("https://api.example.com")
+    click.echo(response.json())
+
+if __name__ == "__main__":
+    main()
+```
+
+### Running Scripts
+
+```bash
+uvg run --script my_script.py
+uvg run --script my_script.py --arg1 value1
+```
+
+### Script Metadata Fields
+
+| Field | Description |
+|-------|-------------|
+| `dependencies` | List of package requirements |
+| `requires-python` | Python version constraint |
+| `description` | Script description |
+
+### Example Scripts
+
+#### Data Processing Script
+
+```python
+# /// script
+# dependencies = [
+#     "pandas>=2.0",
+#     "numpy>=1.24",
+# ]
+# requires-python = ">=3.10"
+# ///
+
+import pandas as pd
+import numpy as np
+
+data = pd.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]})
+print(data.describe())
+```
+
+#### Web Scraping Script
+
+```python
+# /// script
+# dependencies = [
+#     "requests>=2.0",
+#     "beautifulsoup4>=4.12",
+# ]
+# requires-python = ">=3.10"
+# ///
+
+import requests
+from bs4 import BeautifulSoup
+
+response = requests.get("https://example.com")
+soup = BeautifulSoup(response.text, "html.parser")
+print(soup.title.text)
+```
+
+#### CLI Tool Script
+
+```python
+# /// script
+# dependencies = [
+#     "click>=8.0",
+#     "rich>=13.0",
+# ]
+# requires-python = ">=3.10"
+# ///
+
+import click
+from rich.console import Console
+
+console = Console()
+
+@click.command()
+@click.option("--name", default="World")
+def hello(name):
+    console.print(f"Hello, [bold]{name}[/bold]!")
+
+if __name__ == "__main__":
+    hello()
+```
+
+## Tool Cache Location
+
+Tools are cached in `~/.uvg/tools/`:
+
+```
+~/.uvg/tools/
+├── index.json          # Cache index
+├── abc123/             # Cached environment
+│   └── .venv/
+└── def456/             # Another cached environment
+    └── .venv/
+```
+
+## Next Steps
+
+- [CLI: run](/cli/run/) — Run command reference
+- [CI/CD Integration](/guides/ci-cd/) — Use tools in CI/CD
+- [Offline Mode](/guides/offline/) — Run without network access

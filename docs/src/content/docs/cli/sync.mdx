@@ -1,0 +1,81 @@
+---
+title: uvg sync
+description: Build or update the project runtime. Creates symlinks to store objects, generates entry points, and computes the runtime fingerprint.
+---
+
+Build or update the project runtime from the current dependency set.
+
+## Usage
+
+```bash
+uvg sync [options]
+```
+
+## Options
+
+| Option | Description |
+|--------|-------------|
+| `--force` | Force rebuild even if fingerprint matches |
+| `--dry-run` | Show what would be done without making changes |
+
+## How It Works
+
+1. Read dependencies from `pyproject.toml` and lockfile
+2. Resolve via UV (if lockfile is stale)
+3. Download missing wheels to the store
+4. Create symlinks in `.uvg/runtime/site-packages/`
+5. Generate entry point scripts in `.uvg/runtime/bin/`
+6. Compute runtime fingerprint
+7. Write manifest
+
+## Examples
+
+### Basic Sync
+
+```bash
+uvg sync
+```
+
+### Force Rebuild
+
+```bash
+uvg sync --force
+```
+
+### Dry Run
+
+```bash
+uvg sync --dry-run
+```
+
+## Fingerprint Reuse
+
+If the fingerprint matches a previous build, UVG reuses the existing runtime:
+
+```bash
+uvg sync  # First build: 1.2s
+uvg sync  # Fingerprint match: 0.05s
+```
+
+Use `--force` to rebuild even if the fingerprint matches.
+
+## Output
+
+```
+Resolving dependencies...
+Downloading 3 wheels...
+Creating runtime...
+  - numpy 1.26.0
+  - requests 2.31.0
+  - pandas 2.1.4
+Fingerprint: runtime_a1b2c3d4
+Runtime ready in 1.2s
+```
+
+## Next Steps
+
+Run your code:
+
+```bash
+uvg run python script.py
+```

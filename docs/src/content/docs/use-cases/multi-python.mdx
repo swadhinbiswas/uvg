@@ -1,0 +1,137 @@
+---
+title: Multi-Python Projects
+description: Manage projects that need to support multiple Python versions simultaneously. UVG's 7-tuple identity model handles version-specific wheels correctly.
+---
+
+UVG's 7-tuple identity model enables projects to manage dependencies across multiple Python versions.
+
+## The Challenge
+
+Projects that support multiple Python versions need:
+- Different wheels for different Python versions
+- Version-specific ABI tags
+- Correct platform compatibility
+- No leakage between Python versions
+
+## UVG's Solution
+
+### Version-Specific Identity
+
+Each package is identified by a 7-tuple that includes the Python version:
+
+```python
+PackageIdentity(
+    name="numpy",
+    version="1.26.0",
+    python_version="3.11",  # Different for each Python version
+    abi_tag="cp311",
+    platform_tag="manylinux2014_x86_64",
+    architecture="x86_64",
+    wheel_hash="abc123...",
+)
+```
+
+### Separate Store Objects
+
+Same package, different Python versions = different store objects:
+
+```
+~/.uvg/store/objects/sha256/
+  abc123-numpy-cp311-manylinux2014-x86_64/   # Python 3.11
+  def456-numpy-cp312-manylinux2014-x86_64/   # Python 3.12
+```
+
+### Isolated Runtimes
+
+Each Python version gets its own runtime:
+
+```
+project-py311/.uvg/runtime/
+  site-packages/numpy → abc123 (cp311)
+
+project-py312/.uvg/runtime/
+  site-packages/numpy → def456 (cp312)
+```
+
+## Example Workflow
+
+### 1. Create Version-Specific Projects
+
+```bash
+mkdir my-project-py311 && cd my-project-py311
+uvg init --python ">=3.11,<3.12"
+uvg add numpy
+uvg sync
+
+cd ..
+mkdir my-project-py312 && cd my-project-py312
+uvg init --python ">=3.12,<3.13"
+uvg add numpy
+uvg sync
+```
+
+### 2. Verify Version Isolation
+
+```bash
+cd my-project-py311
+uvg run python -c "import sys; print(sys.version)"  # 3.11.x
+
+cd ../my-project-py312
+uvg run python -c "import sys; print(sys.version)"  # 3.12.x
+```
+
+### 3. Test Across Versions
+
+```bash
+for version in 3.11 3.12; do
+  cd my-project-py${version//./}
+  uvg run pytest
+done
+```
+
+## CI/CD Matrix
+
+```yaml
+jobs:
+  test:
+    strategy:
+      matrix:
+        python: ['3.10', '3.11', '3.12']
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install UV
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+      - name: Install UVG
+        run: |
+          git clone https://github.com/swadhin/uvg.git
+          cd uvg && uv sync
+
+      - name: Cache UVG store
+        uses: actions/cache@v4
+        with:
+          path: ~/.uvg/store
+          key: uvg-store-${{ matrix.python }}-${{ hashFiles('pyproject.toml') }}
+
+      - name: Sync runtime
+        run: uvg sync
+
+      - name: Run tests
+        run: uvg run pytest
+```
+
+## Benefits
+
+| Benefit | Description |
+|---------|-------------|
+| No leakage | Python 3.11 packages never mix with 3.12 |
+| Correct wheels | Native extensions compiled for correct Python |
+| Shared storage | Pure Python packages shared across versions |
+| Deterministic | Same version = same fingerprint |
+
+## Next Steps
+
+- [Package Identity](/concepts/package-identity/) — The 7-tuple model
+- [Reproducible Builds](/use-cases/reproducible-builds/) — Deterministic environments

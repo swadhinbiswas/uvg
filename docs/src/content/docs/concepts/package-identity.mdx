@@ -1,0 +1,105 @@
+---
+title: Package Identity
+description: UVG's 7-tuple identity model uniquely identifies packages across name, version, Python version, ABI, platform, architecture, and wheel hash.
+---
+
+UVG uses a **7-tuple identity model** to uniquely identify every package. This is the foundation of UVG's content-addressable storage and deterministic runtime construction.
+
+## The 7-Tuple
+
+```python
+PackageIdentity = (
+    name,           # str: Package name (normalized, lowercase)
+    version,        # str: PEP 440 version string
+    python_version, # str: Python version (e.g., "3.12")
+    abi_tag,        # str: ABI tag (e.g., "cp312", "abi3", "none")
+    platform_tag,   # str: Platform tag (e.g., "manylinux2014_x86_64")
+    architecture,   # str: Architecture (e.g., "x86_64", "arm64")
+    wheel_hash,     # str: SHA-256 hash of the wheel file
+)
+```
+
+## Why 7 Fields?
+
+### Name + Version Alone Is Not Enough
+
+`numpy==1.26.0` could be:
+- A wheel for Python 3.11 on Linux x86_64
+- A wheel for Python 3.12 on macOS ARM64
+- A wheel for Python 3.11 on Windows x86_64
+
+These are **completely different binaries** with different compiled extensions.
+
+### ABI Tag
+
+The ABI tag determines Python API compatibility:
+- `cp312` — CPython 3.12 specific
+- `abi3` — Stable ABI (works across Python 3.x)
+- `none` — Pure Python (no compiled extensions)
+
+### Platform Tag
+
+The platform tag determines OS compatibility:
+- `manylinux2014_x86_64` — Linux (glibc 2.17+)
+- `macosx13_0_arm64` — macOS 13+ on Apple Silicon
+- `win_amd64` — Windows 64-bit
+
+### Architecture
+
+Explicit architecture tracking enables:
+- Cross-platform workspace management
+- Accurate dependency resolution for mixed-architecture teams
+- Correct wheel selection for native extensions
+
+### Wheel Hash
+
+The SHA-256 hash of the wheel file ensures:
+- Content-addressable storage (same content = same hash)
+- Tamper detection (modified content = different hash)
+- Deduplication (identical wheels stored once)
+
+## Example Identities
+
+```python
+# numpy for Python 3.12 on Linux x86_64
+PackageIdentity(
+    name="numpy",
+    version="1.26.0",
+    python_version="3.12",
+    abi_tag="cp312",
+    platform_tag="manylinux2014_x86_64",
+    architecture="x86_64",
+    wheel_hash="abc123...",
+)
+
+# Same version, different platform (macOS ARM64)
+PackageIdentity(
+    name="numpy",
+    version="1.26.0",
+    python_version="3.12",
+    abi_tag="cp312",
+    platform_tag="macosx13_0_arm64",
+    architecture="arm64",
+    wheel_hash="def456...",  # Different hash!
+)
+```
+
+## Normalization
+
+Package names are normalized according to PEP 503:
+- Lowercase
+- Hyphens, underscores, and periods are equivalent
+- `Flask-RESTful` → `flask-restful`
+
+## Immutability
+
+Package identities are **frozen** — once created, they cannot be modified. This ensures:
+- Store objects are immutable
+- Fingerprints are deterministic
+- Runtimes are reproducible
+
+## Next Steps
+
+- [Content-Addressable Store](/concepts/store/) — How packages are stored
+- [Runtime Construction](/concepts/runtime/) — How runtimes are built
+- [Fingerprinting](/concepts/fingerprinting/) — How determinism is achieved

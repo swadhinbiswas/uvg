@@ -1,0 +1,65 @@
+---
+title: uvg info
+description: Show UVG configuration, environment information, UV path, Python version, and store location.
+---
+
+Display UVG configuration and environment information.
+
+## Usage
+
+```bash
+uvg info
+```
+
+## Output
+
+```
+UVG Information
+===============
+Version: 0.0.1
+UV Path: /usr/local/bin/uv
+UV Version: 0.5.0
+Python: 3.12.1
+Platform: linux-x86_64
+Store: /home/user/.uvg/store
+Index: /home/user/.uvg/store/index.db
+```
+
+## Fields
+
+| Field | Description |
+|-------|-------------|
+| Version | UVG version |
+| UV Path | Path to the UV executable |
+| UV Version | UV version |
+| Python | Python version used for resolution |
+| Platform | Current platform (os-arch) |
+| Store | Path to the content-addressable store |
+| Index | Path to the SQLite index |
+
+## Troubleshooting
+
+### UV Not Found
+
+```
+Error: UV not found. Install UV from https://docs.astral.sh/uv/getting-started/installation/
+```
+
+**Fix:** Install UV:
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+### Python Not Found
+
+```
+Error: Python 3.10+ not found.
+```
+
+**Fix:** Install Python 3.10 or later.
+
+## Next Steps
+
+- [Installation](/getting-started/installation/) — Install UVG
+- [Configuration](/config/file/) — Configure UVG

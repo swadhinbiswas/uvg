@@ -1,0 +1,65 @@
+---
+title: uvg run
+description: Run a command with the UVG runtime. Sets PYTHONPATH to point to the isolated runtime's site-packages.
+---
+
+Run a command with the UVG runtime's isolated environment.
+
+## Usage
+
+```bash
+uvg run {'<command>'} [args...]
+```
+
+## How It Works
+
+1. Verify the runtime exists and is valid
+2. Set `PYTHONPATH` to `.uvg/runtime/site-packages/`
+3. Add `.uvg/runtime/bin/` to `PATH`
+4. Execute the command
+
+## Examples
+
+### Run Python
+
+```bash
+uvg run python script.py
+```
+
+### Run Python with Arguments
+
+```bash
+uvg run python -c "import requests; print(requests.__version__)"
+```
+
+### Run Entry Point
+
+```bash
+uvg run pytest tests/
+uvg run flask run
+uvg run black .
+```
+
+### Run Shell
+
+```bash
+uvg run bash
+# Inside the shell, PYTHONPATH is set correctly
+python -c "import requests"
+```
+
+## Environment Variables
+
+`uvg run` sets the following environment variables:
+
+| Variable | Value |
+|----------|-------|
+| `PYTHONPATH` | `.uvg/runtime/site-packages/` |
+| `PATH` | `.uvg/runtime/bin/` prepended |
+| `UVG_RUNTIME` | Path to the runtime directory |
+| `UVG_FINGERPRINT` | Runtime fingerprint |
+
+## Next Steps
+
+- [uvg sync](/cli/sync/) — Build the runtime before running
+- [uvg doctor](/cli/doctor/) — Diagnose runtime issues

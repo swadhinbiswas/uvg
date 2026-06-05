@@ -1,0 +1,171 @@
+---
+title: Database Design
+description: UVG uses SQLite with WAL mode for indexing the content-addressable store. ACID transactions, concurrent reads, and zero configuration.
+---
+
+UVG uses SQLite for indexing the content-addressable store.
+
+## Why SQLite?
+
+- **Zero configuration** — No server to manage
+- **ACID transactions** — Data integrity guaranteed
+- **Concurrent reads** — WAL mode enables parallel access
+- **Portable** — Single file, cross-platform
+- **Fast** — In-process, no network overhead
+
+## Schema
+
+### Objects Table
+
+```sql
+CREATE TABLE objects (
+    hash TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    version TEXT NOT NULL,
+    python_version TEXT NOT NULL,
+    abi_tag TEXT NOT NULL,
+    platform_tag TEXT NOT NULL,
+    architecture TEXT NOT NULL,
+    size INTEGER NOT NULL,
+    file_count INTEGER NOT NULL,
+    created_at TEXT NOT NULL
+);
+```
+
+### Indexes
+
+```sql
+CREATE INDEX idx_name ON objects(name);
+CREATE INDEX idx_name_version ON objects(name, version);
+CREATE INDEX idx_python_version ON objects(python_version);
+CREATE INDEX idx_platform ON objects(platform_tag);
+```
+
+## WAL Mode
+
+### Configuration
+
+```python
+conn = sqlite3.connect(path)
+conn.execute("PRAGMA journal_mode=WAL")
+conn.execute("PRAGMA synchronous=NORMAL")
+conn.execute("PRAGMA cache_size=-64000")  # 64 MB cache
+```
+
+### Benefits
+
+- **Concurrent reads** — Readers don't block readers
+- **Fast writes** — Write-ahead log, not full database rewrite
+- **Crash recovery** — WAL file replayed on recovery
+- **No locking** — Readers don't acquire database locks
+
+### File Layout
+
+```
+~/.uvg/store/
+├── index.db      # Main database
+├── index.db-wal  # Write-ahead log
+└── index.db-shm  # Shared memory
+```
+
+## Queries
+
+### Lookup by Hash
+
+```sql
+SELECT * FROM objects WHERE hash = ?
+```
+
+### Lookup by Name
+
+```sql
+SELECT * FROM objects WHERE name = ?
+```
+
+### Lookup by Name and Version
+
+```sql
+SELECT * FROM objects WHERE name = ? AND version = ?
+```
+
+### List All
+
+```sql
+SELECT * FROM objects ORDER BY name, version
+```
+
+### Statistics
+
+```sql
+SELECT COUNT(*) as total, SUM(size) as total_size FROM objects
+```
+
+### Shared Dependencies
+
+```sql
+SELECT name, COUNT(*) as project_count
+FROM objects
+GROUP BY name
+ORDER BY project_count DESC
+```
+
+## Transactions
+
+### Create Object
+
+```python
+with conn:
+    conn.execute(
+        "INSERT OR IGNORE INTO objects VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        (hash, name, version, python_version, abi_tag, platform_tag,
+         architecture, size, file_count, created_at)
+    )
+```
+
+### Delete Object
+
+```python
+with conn:
+    conn.execute("DELETE FROM objects WHERE hash = ?", (hash,))
+```
+
+## Performance
+
+| Operation | Time |
+|-----------|------|
+| Primary key lookup | < 0.1 ms |
+| Index lookup | < 0.5 ms |
+| Full table scan | < 5 ms (1000 objects) |
+| Insert | < 1 ms |
+| Delete | < 1 ms |
+
+## Maintenance
+
+### Vacuum
+
+```python
+conn.execute("VACUUM")
+```
+
+Reclaims space from deleted objects.
+
+### Integrity Check
+
+```python
+result = conn.execute("PRAGMA integrity_check").fetchone()
+```
+
+Verifies database integrity.
+
+### WAL Checkpoint
+
+```python
+conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+```
+
+Flushes WAL to main database.
+
+## Next Steps
+
+- [Store Architecture](/architecture/store/) — How objects are stored
+- [Security Model](/architecture/security/) — Integrity verification

@@ -1,0 +1,91 @@
+---
+title: uvg store
+description: Manage the content-addressable store. Add, remove, list, and inspect store objects.
+---
+
+Manage UVG's content-addressable store directly.
+
+## Usage
+
+```bash
+uvg store {'<subcommand>'} [options]
+```
+
+## Subcommands
+
+| Subcommand | Description |
+|------------|-------------|
+| `add` | Add a wheel to the store |
+| `get` | Get a store object by hash |
+| `remove` | Remove a store object |
+| `list` | List store objects |
+| `info` | Show store object details |
+| `stats` | Show store statistics |
+
+## Examples
+
+### Add a Wheel
+
+```bash
+uvg store add path/to/package.whl
+```
+
+### List All Objects
+
+```bash
+uvg store list
+```
+
+### Filter by Name
+
+```bash
+uvg store list --name numpy
+```
+
+### Get Object Info
+
+```bash
+uvg store info abc123...
+```
+
+```
+Object: abc123...
+Name: numpy
+Version: 1.26.0
+Python: 3.12
+ABI: cp312
+Platform: manylinux2014_x86_64
+Architecture: x86_64
+Size: 40.2 MB
+Files: 1247
+Created: 2024-01-15T10:30:00Z
+```
+
+### Remove an Object
+
+```bash
+uvg store remove abc123...
+```
+
+**Note:** Objects referenced by active runtimes cannot be removed.
+
+### Store Statistics
+
+```bash
+uvg store stats
+```
+
+```
+Store Statistics
+================
+Total objects: 47
+Total size: 1.2 GB
+Unique packages: 23
+Python versions: 3.11, 3.12
+Platforms: linux-x86_64, macos-arm64
+```
+
+## Next Steps
+
+- [Store Architecture](/architecture/store/) — How the store works
+- [uvg stats](/cli/stats/) — Project-level statistics

@@ -4,17 +4,31 @@ build-backend = "hatchling.build"
 
 [project]
 name = "uvg"
-version = "0.0.1"
+version = "0.1.0"
 description = "One Package Store. Zero Duplicate Environments."
 readme = "README.md"
 license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.10"
 authors = [
-    { name = "UVG Contributors" },
+    { name = "UVG Contributors", email = "uvg@users.noreply.github.com" },
 ]
-keywords = ["package-manager", "python", "runtime", "storage", "caching"]
+maintainers = [
+    { name = "UVG Contributors", email = "uvg@users.noreply.github.com" },
+]
+keywords = [
+    "package-manager",
+    "python",
+    "runtime",
+    "storage",
+    "caching",
+    "content-addressable",
+    "uv",
+    "workspace",
+    "monorepo",
+]
 classifiers = [
-    "Development Status :: 2 - Pre-Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
@@ -25,13 +39,23 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Topic :: Software Development :: Build Tools",
     "Topic :: System :: Software Distribution",
+    "Topic :: System :: Systems Administration",
+    "Typing :: Typed",
 ]
 
 dependencies = [
     "click>=8.1.0",
-    "pydantic>=2.0.0",
-    "rich>=13.0.0",
 ]
+
+[project.urls]
+Homepage = "https://uvg.opencodehub.space"
+Documentation = "https://uvg.opencodehub.space"
+Repository = "https://github.com/swadhin/uvg"
+Changelog = "https://github.com/swadhin/uvg/blob/main/CHANGELOG.md"
+"Bug Tracker" = "https://github.com/swadhin/uvg/issues"
+
+[project.scripts]
+uvg = "uvg.cli.main:main"
 
 [project.optional-dependencies]
 dev = [
@@ -44,11 +68,18 @@ dev = [
     "build>=1.0.0",
 ]
 
-[project.scripts]
-uvg = "uvg.cli.main:main"
-
 [tool.hatch.build.targets.wheel]
 packages = ["src/uvg"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+    "/tests",
+    "/LICENSE",
+    "/CHANGELOG.md",
+    "/README.md",
+    "/pyproject.toml",
+]
 
 [tool.ruff]
 target-version = "py310"

@@ -261,7 +261,7 @@ What's new:
 - {feature 3}
 
 Install: pip install uvg=={version}
-Docs: https://uvg.dev/docs
+Docs: https://uvg.opencodehub.space/docs
 Changelog: https://github.com/uvg/uvg/releases/tag/v{version}
 ```
 

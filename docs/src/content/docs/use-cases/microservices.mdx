@@ -1,0 +1,193 @@
+---
+title: Microservices
+description: Manage Python microservice dependencies with UVG. Each service gets an isolated runtime while sharing common packages through the global store.
+---
+
+UVG provides isolated runtimes for each microservice while sharing common packages through the global store.
+
+## The Challenge
+
+Microservice architectures typically have:
+- Many services with overlapping dependencies
+- Different Python versions per service
+- Need for isolation (no dependency leakage)
+- Fast deployment requirements
+- CI/CD pipeline efficiency
+
+## UVG's Solution
+
+### Per-Service Isolation
+
+Each service gets its own runtime:
+
+```
+services/
+├── auth/
+│   └── .uvg/runtime/
+│       ├── site-packages/ → fastapi, pydantic, jwt
+│       └── bin/
+├── api/
+│   └── .uvg/runtime/
+│       ├── site-packages/ → flask, requests, sqlalchemy
+│       └── bin/
+└── worker/
+    └── .uvg/runtime/
+        ├── site-packages/ → celery, redis, pydantic
+        └── bin/
+```
+
+### Shared Store
+
+Common packages are stored once:
+
+```
+~/.uvg/store/objects/sha256/
+  abc123-pydantic/  → used by auth, worker
+  def456-requests/  → used by api
+  ghi789-sqlalchemy/ → used by api
+```
+
+### Fast Deployment
+
+```bash
+# Deploy auth service
+cd services/auth
+uvg sync  # 0.5s (store already populated)
+uvg run uvicorn main:app --host 0.0.0.0
+```
+
+## Example Workflow
+
+### 1. Service Structure
+
+```
+monorepo/
+├── services/
+│   ├── auth/
+│   │   ├── pyproject.toml
+│   │   └── src/
+│   ├── api/
+│   │   ├── pyproject.toml
+│   │   └── src/
+│   └── worker/
+│       ├── pyproject.toml
+│       └── src/
+└── libs/
+    └── shared/
+        ├── pyproject.toml
+        └── src/
+```
+
+### 2. Initialize Services
+
+```bash
+cd services/auth
+uvg init
+uvg add fastapi pydantic uvicorn ../libs/shared
+uvg sync
+
+cd ../api
+uvg init
+uvg add flask requests sqlalchemy ../libs/shared
+uvg sync
+
+cd ../worker
+uvg init
+uvg add celery redis pydantic ../libs/shared
+uvg sync
+```
+
+### 3. Workspace Sync
+
+```bash
+cd monorepo
+uvg workspace sync
+uvg workspace doctor
+```
+
+### 4. Deploy
+
+```bash
+# Each service deploys independently
+cd services/auth
+uvg run uvicorn main:app --host 0.0.0.0 --port 8001
+
+cd services/api
+uvg run gunicorn main:app --bind 0.0.0.0:8002
+
+cd services/worker
+uvg run celery -A main worker --loglevel=info
+```
+
+## Docker Deployment
+
+```dockerfile
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# Install UV
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Install UVG
+RUN git clone https://github.com/swadhin/uvg.git && cd uvg && uv sync
+
+# Copy service
+COPY services/auth/ .
+
+# Sync runtime
+RUN uvg sync
+
+# Run service
+CMD ["uvg", "run", "uvicorn", "main:app", "--host", "0.0.0.0"]
+```
+
+## CI/CD
+
+```yaml
+jobs:
+  deploy:
+    strategy:
+      matrix:
+        service: [auth, api, worker]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install UV
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+      - name: Install UVG
+        run: |
+          git clone https://github.com/swadhin/uvg.git
+          cd uvg && uv sync
+
+      - name: Cache UVG store
+        uses: actions/cache@v4
+        with:
+          path: ~/.uvg/store
+          key: uvg-store-${{ hashFiles('**/pyproject.toml') }}
+
+      - name: Sync service
+        run: |
+          cd services/${{ matrix.service }}
+          uvg sync
+
+      - name: Run tests
+        run: |
+          cd services/${{ matrix.service }}
+          uvg run pytest
+```
+
+## Best Practices
+
+1. **One runtime per service** — Strict isolation
+2. **Shared library in workspace** — Common code as a workspace project
+3. **Cache the store** — Fast CI/CD builds
+4. **Verify in CI** — Run `uvg verify` before deployment
+5. **Monitor with stats** — Track storage usage across services
+
+## Next Steps
+
+- [Monorepo Management](/use-cases/monorepo/) — Workspace mode
+- [Edge Deployment](/use-cases/edge/) — Deploy to edge environments

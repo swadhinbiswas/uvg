@@ -1,0 +1,100 @@
+---
+title: Custom Registries
+description: Configure UVG to use private package registries, Artifactory, or PyPI mirrors.
+---
+
+Configure UVG to use custom package registries.
+
+## Configuration
+
+UVG delegates to UV for resolution, so registry configuration is done via UV's settings.
+
+### Environment Variables
+
+```bash
+# Custom index URL
+export UV_INDEX_URL=https://pypi.mycompany.com/simple
+
+# Additional indexes
+export UV_EXTRA_INDEX_URLS=https://pypi.internal.com/simple
+
+# Authentication
+export UV_INDEX_URL=https://user:password@pypi.mycompany.com/simple
+```
+
+### UV Configuration
+
+Create `~/.config/uv/uv.toml`:
+
+```toml
+[[index]]
+url = "https://pypi.mycompany.com/simple"
+default = true
+
+[[index]]
+url = "https://pypi.org/simple"
+```
+
+## Private Registries
+
+### Artifactory
+
+```bash
+export UV_INDEX_URL=https://artifactory.mycompany.com/artifactory/api/pypi/pypi/simple
+export UV_INDEX_USERNAME=your-username
+export UV_INDEX_PASSWORD=your-password
+```
+
+### AWS CodeArtifact
+
+```bash
+export UV_INDEX_URL=$(aws codeartifact get-authorization-token --domain my-domain --region us-east-1 --query authorizationToken --output text)@my-domain-123456789.d.codeartifact.us-east-1.amazonaws.com/pypi/my-repo/simple/
+```
+
+### Google Artifact Registry
+
+```bash
+export UV_INDEX_URL=https://oauth2accesstoken:$(gcloud auth print-access-token)@us-east1-python.pkg.dev/my-project/my-repo/simple/
+```
+
+## PyPI Mirrors
+
+Use a mirror for faster downloads:
+
+```bash
+export UV_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple
+```
+
+## Verification
+
+Verify that UVG is using the correct registry:
+
+```bash
+uvg add requests --verbose
+```
+
+You should see the registry URL in the output.
+
+## Security
+
+### Hash Checking
+
+UVG verifies wheel hashes regardless of the registry:
+
+```bash
+uvg verify --store
+```
+
+### TLS Verification
+
+Ensure your registry uses HTTPS:
+
+```bash
+# Disable TLS verification (not recommended)
+export UV_TLS_VERIFY=false
+```
+
+## Next Steps
+
+- [Security Model](/architecture/security/) — How UVG verifies integrity
+- [Offline Mode](/guides/offline/) — Run without network access

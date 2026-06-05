@@ -1,7 +1,6 @@
 """Security verification engine.
 
-Verifies hash integrity, runtime consistency, lockfile validity,
-and supply chain provenance.
+Verifies runtime consistency and lockfile validity.
 """
 
 from __future__ import annotations
@@ -11,7 +10,7 @@ from enum import Enum
 from pathlib import Path
 
 from uvg.runtime.manifest import RuntimeManifest
-from uvg.store.store import Store
+from uvg.uv.lockfile import UVGLockfile
 
 
 class VerificationStatus(Enum):
@@ -129,144 +128,70 @@ class SecurityVerifier:
     """Verifies security properties of UVG artifacts.
 
     Provides comprehensive verification of:
-    - Store object integrity
     - Runtime manifest consistency
     - Lockfile validity
-    - Hash verification
-    - Supply chain provenance
+    - Symlink integrity
     """
 
-    def __init__(self, store: Store | None = None) -> None:
-        """Initialize security verifier.
-
-        Args:
-            store: UVG store instance.
-        """
-        self.store = store
-
-    def verify_store(self) -> VerificationReport:
-        """Verify store integrity.
-
-        Returns:
-            VerificationReport with store verification results.
-        """
-        report = VerificationReport()
-
-        if self.store is None:
-            report.add_skip("store_exists", "No store configured")
-            return report
-
-        if not self.store.store_path.exists():
-            report.add_fail("store_exists", "Store directory does not exist")
-            return report
-
-        report.add_pass("store_exists", "Store directory exists")
-
-        objects = self.store.list_objects(limit=1000)
-        verified = 0
-        failed = 0
-
-        for obj_data in objects:
-            try:
-                obj = self.store.get_object(obj_data["hash"])
-                obj.verify_integrity()
-                verified += 1
-            except Exception as e:
-                failed += 1
-                report.add_fail(
-                    "object_integrity",
-                    f"Object verification failed: {obj_data.get('package_name', 'unknown')}",
-                    str(e),
-                )
-
-        if failed == 0:
-            report.add_pass(
-                "object_integrity",
-                f"All {verified} objects verified successfully",
-            )
-        else:
-            report.add_fail(
-                "object_integrity",
-                f"{failed} objects failed verification out of {verified + failed}",
-            )
-
-        return report
+    def __init__(self) -> None:
+        """Initialize security verifier."""
+        pass
 
     def verify_runtime(self, runtime_dir: Path) -> VerificationReport:
         """Verify runtime integrity.
 
         Args:
-            runtime_dir: Path to the runtime directory.
+            runtime_dir: Path to runtime directory.
 
         Returns:
             VerificationReport with runtime verification results.
         """
         report = VerificationReport()
 
+        if not runtime_dir.exists():
+            report.add_fail("runtime_exists", "Runtime directory does not exist")
+            return report
+
+        report.add_pass("runtime_exists", "Runtime directory exists")
+
+        # Check manifest
         manifest_path = runtime_dir / "manifest.json"
         if not manifest_path.exists():
-            report.add_fail("manifest_exists", "Manifest file missing")
+            report.add_fail("manifest_exists", "Manifest file does not exist")
             return report
 
         report.add_pass("manifest_exists", "Manifest file exists")
 
         try:
             manifest = RuntimeManifest.load(manifest_path)
+            report.add_pass("manifest_valid", "Manifest is valid JSON")
         except Exception as e:
-            report.add_fail("manifest_valid", f"Failed to load manifest: {e}")
+            report.add_fail("manifest_valid", f"Failed to parse manifest: {e}")
             return report
 
-        report.add_pass("manifest_valid", "Manifest is valid JSON")
-
+        # Check fingerprint
         if not manifest.fingerprint:
-            report.add_fail("fingerprint_present", "No fingerprint in manifest")
+            report.add_warn("fingerprint_present", "No fingerprint in manifest")
         else:
             report.add_pass("fingerprint_present", f"Fingerprint: {manifest.fingerprint}")
 
-        fp_path = runtime_dir / "fingerprint"
-        if fp_path.exists():
-            stored_fp = fp_path.read_text(encoding="utf-8").strip()
-            if stored_fp == manifest.fingerprint:
-                report.add_pass("fingerprint_match", "Fingerprint matches manifest")
-            else:
-                report.add_fail(
-                    "fingerprint_match",
-                    f"Fingerprint mismatch: stored={stored_fp}, manifest={manifest.fingerprint}",
-                )
-        else:
-            report.add_warn("fingerprint_file", "Fingerprint file missing")
-
+        # Check symlinks
         site_packages = runtime_dir / "site-packages"
-        if site_packages.exists():
-            missing_symlinks = []
-            for pkg in manifest.packages.values():
-                symlink = site_packages / pkg.name
-                if not symlink.exists():
-                    missing_symlinks.append(pkg.name)
-
-            if missing_symlinks:
-                report.add_fail(
-                    "symlinks_valid",
-                    f"Missing symlinks: {', '.join(missing_symlinks)}",
-                )
-            else:
-                report.add_pass("symlinks_valid", "All package symlinks valid")
+        if not site_packages.exists():
+            report.add_fail("site_packages_exists", "site-packages directory does not exist")
         else:
-            report.add_warn("symlinks_valid", "Site-packages directory missing")
+            report.add_pass("site_packages_exists", "site-packages directory exists")
 
-        if self.store is not None:
-            missing_objects = []
-            for pkg in manifest.packages.values():
-                if not self.store.has_object(pkg.wheel_hash):
-                    missing_objects.append(pkg.name)
+            # Verify symlinks
+            broken_links = []
+            for link in site_packages.iterdir():
+                if link.is_symlink() and not link.exists():
+                    broken_links.append(link.name)
 
-            if missing_objects:
-                report.add_fail(
-                    "store_objects_present",
-                    f"Missing store objects: {', '.join(missing_objects)}",
-                )
+            if broken_links:
+                report.add_fail("symlinks_valid", f"Broken symlinks: {', '.join(broken_links)}")
             else:
-                report.add_pass("store_objects_present", "All store objects present")
+                report.add_pass("symlinks_valid", "All symlinks are valid")
 
         return report
 
@@ -288,7 +213,7 @@ class SecurityVerifier:
         report.add_pass("lockfile_exists", "Lockfile exists")
 
         try:
-            manifest = RuntimeManifest.load(lockfile_path)
+            lockfile = UVGLockfile.load(lockfile_path)
         except Exception as e:
             report.add_fail("lockfile_valid", f"Failed to parse lockfile: {e}")
             return report
@@ -296,9 +221,9 @@ class SecurityVerifier:
         report.add_pass("lockfile_valid", "Lockfile is valid")
 
         missing_hashes = []
-        for name, pkg in manifest.packages.items():
-            if not pkg.wheel_hash:
-                missing_hashes.append(name)
+        for pkg in lockfile.packages:
+            if not pkg.hash:
+                missing_hashes.append(pkg.name)
 
         if missing_hashes:
             report.add_fail(
@@ -308,10 +233,10 @@ class SecurityVerifier:
         else:
             report.add_pass("hashes_present", "All packages have hashes")
 
-        if not manifest.fingerprint:
+        if not lockfile.fingerprint:
             report.add_warn("lockfile_fingerprint", "No fingerprint in lockfile")
         else:
-            report.add_pass("lockfile_fingerprint", f"Fingerprint: {manifest.fingerprint}")
+            report.add_pass("lockfile_fingerprint", f"Fingerprint: {lockfile.fingerprint}")
 
         return report
 
@@ -323,16 +248,13 @@ class SecurityVerifier:
         """Run all verification checks.
 
         Args:
-            runtime_dir: Optional path to runtime directory.
-            lockfile_path: Optional path to lockfile.
+            runtime_dir: Optional runtime directory.
+            lockfile_path: Optional lockfile path.
 
         Returns:
-            Combined VerificationReport.
+            VerificationReport with all verification results.
         """
         report = VerificationReport()
-
-        store_report = self.verify_store()
-        report.checks.extend(store_report.checks)
 
         if runtime_dir is not None:
             runtime_report = self.verify_runtime(runtime_dir)

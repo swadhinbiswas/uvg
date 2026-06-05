@@ -1,0 +1,189 @@
+---
+title: "Runtime Architecture"
+description: "Deep dive into UVG runtime construction: symlink-based import paths, fingerprinting, manifest, and entry point generation."
+---
+
+UVG constructs isolated Python runtimes using symlinks to the global store.
+
+## Runtime Layout
+
+```
+project/.uvg/runtime/
+├── manifest.json
+├── site-packages/
+│   ├── numpy → ~/.uvg/store/objects/sha256/abc123.../wheel/numpy
+│   ├── requests → ~/.uvg/store/objects/sha256/def456.../wheel/requests
+│   └── ...
+└── bin/
+    ├── flask
+    ├── pytest
+    └── ...
+```
+
+## Import Path Construction
+
+### Symlink-Based (Primary)
+
+```python
+# For each package in the dependency set:
+runtime_site_packages / package_name → store_object / wheel / package_name
+```
+
+Symlinks are preferred because they:
+- Work with native Python import machinery
+- Support namespace packages
+- Are fast (OS-level)
+- Require no disk space
+
+### PYTHONPATH (Wrapper)
+
+```bash
+PYTHONPATH=/path/to/project/.uvg/runtime/site-packages python script.py
+```
+
+UVG's `run` command sets `PYTHONPATH` automatically.
+
+## Fingerprinting
+
+### Input
+
+```python
+FingerprintInput = {
+    "packages": [
+        ("name", "version", "hash"),  # Sorted
+        ...
+    ],
+    "python_version": "3.12",
+    "platform": "linux",
+    "architecture": "x86_64",
+}
+```
+
+### Computation
+
+```python
+def compute_fingerprint(input: FingerprintInput) -> str:
+    data = json.dumps(input, sort_keys=True, separators=(',', ':'))
+    hash_bytes = hashlib.sha256(data.encode('utf-8')).digest()
+    return f"runtime_{hash_bytes[:4].hex()}"
+```
+
+### Reuse
+
+```python
+def sync(project: Project) -> Runtime:
+    fingerprint = compute_fingerprint(project.dependencies)
+    
+    if runtime_exists(fingerprint):
+        return load_runtime(fingerprint)  # Instant reuse
+    
+    return build_runtime(project, fingerprint)
+```
+
+## Manifest
+
+### Structure
+
+```json
+{
+  "fingerprint": "runtime_a1b2c3d4",
+  "python_version": "3.12",
+  "created_at": "2024-01-15T10:30:00Z",
+  "packages": [
+    {
+      "name": "numpy",
+      "version": "1.26.0",
+      "hash": "abc123...",
+      "editable": false
+    }
+  ],
+  "entry_points": [
+    {
+      "name": "flask",
+      "module": "flask.cli",
+      "function": "main"
+    }
+  ]
+}
+```
+
+### Purpose
+
+- Track runtime state
+- Enable verification
+- Support rollback
+- Document dependencies
+
+## Entry Point Generation
+
+### Source
+
+Entry points come from `.dist-info/entry_points.txt`:
+
+```
+[console_scripts]
+flask = flask.cli:main
+pytest = pytest:console_main
+```
+
+### Generated Script
+
+```python
+#!/usr/bin/env python3
+import sys
+sys.path.insert(0, '/path/to/project/.uvg/runtime/site-packages')
+from flask.cli import main
+main()
+```
+
+### Permissions
+
+Scripts are made executable:
+
+```python
+os.chmod(script_path, 0o755)
+```
+
+## Idempotency
+
+Runtime construction is idempotent:
+
+```python
+def build_runtime(project: Project) -> Runtime:
+    # Clean existing runtime
+    if runtime_dir.exists():
+        shutil.rmtree(runtime_dir)
+    
+    # Create fresh
+    runtime_dir.mkdir(parents=True)
+    create_symlinks(project.dependencies)
+    generate_entry_points(project.dependencies)
+    write_manifest(project.dependencies)
+    compute_fingerprint(project.dependencies)
+```
+
+## Verification
+
+```python
+def verify_runtime(runtime: Runtime) -> VerificationReport:
+    report = VerificationReport()
+    
+    # Check manifest
+    report.add(check_manifest(runtime))
+    
+    # Check symlinks
+    report.add(check_symlinks(runtime))
+    
+    # Check fingerprint
+    report.add(check_fingerprint(runtime))
+    
+    # Check entry points
+    report.add(check_entry_points(runtime))
+    
+    return report
+```
+
+## Next Steps
+
+- [Fingerprinting](/concepts/fingerprinting/) — Deterministic runtime identification
+- [Security Model](/architecture/security/) — Integrity verification

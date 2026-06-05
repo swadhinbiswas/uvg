@@ -1,0 +1,172 @@
+---
+title: Edge Deployment
+description: Deploy Python applications to edge environments with UVG. Deterministic runtimes, offline capability, and minimal storage footprint.
+---
+
+Deploy Python applications to edge environments with UVG's deterministic runtimes and offline capability.
+
+## The Challenge
+
+Edge deployments require:
+- Deterministic environments (same everywhere)
+- Offline capability (no network at edge)
+- Minimal storage footprint (limited disk space)
+- Fast startup (low latency requirements)
+- Integrity verification (security-critical)
+
+## UVG's Solution
+
+### Deterministic Runtimes
+
+Same fingerprint on every edge node:
+
+```bash
+# Build machine
+uvg sync
+# Fingerprint: runtime_a1b2c3d4
+
+# Edge node (same pyproject.toml)
+uvg sync
+# Fingerprint: runtime_a1b2c3d4 (same!)
+```
+
+### Offline Capability
+
+Pre-populate the store, deploy without network:
+
+```bash
+# Build machine
+uvg sync
+tar -czf uvg-store.tar.gz ~/.uvg/store/
+
+# Edge node
+tar -xzf uvg-store.tar.gz -C ~/.uvg/
+uvg sync  # No network needed
+uvg run python main.py
+```
+
+### Minimal Storage
+
+Content-addressable storage eliminates duplication:
+
+```
+Without UVG: 5 edge nodes × 200 MB = 1 GB
+With UVG: 200 MB (shared store) + symlinks
+```
+
+### Integrity Verification
+
+Verify runtime integrity before execution:
+
+```bash
+uvg verify --strict
+# All checks passed
+uvg run python main.py
+```
+
+## Example Workflow
+
+### 1. Build Runtime
+
+```bash
+cd my-edge-app
+uvg init
+uvg add requests numpy
+uvg sync
+uvg verify
+```
+
+### 2. Package for Deployment
+
+```bash
+tar -czf edge-runtime.tar.gz \
+  ~/.uvg/store/ \
+  pyproject.toml \
+  uv.lock \
+  src/
+```
+
+### 3. Deploy to Edge Node
+
+```bash
+# On edge node
+tar -xzf edge-runtime.tar.gz -C /opt/edge-app/
+cd /opt/edge-app/
+uvg sync
+uvg verify --strict
+uvg run python src/main.py
+```
+
+### 4. Verify and Monitor
+
+```bash
+# Check runtime health
+uvg doctor
+
+# Check storage usage
+uvg stats
+
+# Verify integrity
+uvg verify
+```
+
+## Container Deployment
+
+```dockerfile
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# Install UV
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Install UVG
+RUN git clone https://github.com/swadhin/uvg.git && cd uvg && uv sync
+
+# Copy application
+COPY . .
+
+# Sync runtime
+RUN uvg sync
+
+# Verify
+RUN uvg verify --strict
+
+# Run
+CMD ["uvg", "run", "python", "src/main.py"]
+```
+
+## Kubernetes
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: edge-app
+spec:
+  replicas: 3
+  template:
+    spec:
+      containers:
+        - name: app
+          image: my-registry/edge-app:latest
+          command: ["uvg", "run", "python", "src/main.py"]
+          readinessProbe:
+            exec:
+              command: ["uvg", "verify", "--strict"]
+            initialDelaySeconds: 5
+            periodSeconds: 10
+```
+
+## Best Practices
+
+1. **Pre-populate the store** — Build on a machine with network access
+2. **Verify before deploy** — Run `uvg verify --strict`
+3. **Cache in CI/CD** — Speed up builds
+4. **Monitor storage** — Use `uvg stats` to track usage
+5. **Pin versions** — Ensure reproducibility across edge nodes
+
+## Next Steps
+
+- [Offline Mode](/guides/offline/) — Run without network access
+- [Reproducible Builds](/use-cases/reproducible-builds/) — Deterministic environments

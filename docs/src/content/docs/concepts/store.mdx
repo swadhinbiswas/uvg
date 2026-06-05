@@ -1,0 +1,186 @@
+---
+title: Content-Addressable Store
+description: UVG's global store uses SHA-256 hashes to address package content, enabling deduplication, integrity verification, and fast lookups.
+---
+
+UVG's store is a **content-addressable storage system** where every package is identified by its SHA-256 hash. This enables automatic deduplication, integrity verification, and O(1) lookups.
+
+## Store Layout
+
+```
+~/.uvg/store/
+├── objects/
+│   └── sha256/
+│       ├── abc123-cp312-manylinux2014-x86_64/
+│       │   ├── object.json          # Metadata
+│       │   └── wheel/               # Extracted wheel contents
+│       │       ├── numpy/
+│       │       ├── numpy-1.26.0.dist-info/
+│       │       └── ...
+│       ├── def456-cp311-macosx13_0-arm64/
+│       │   ├── object.json
+│       │   └── wheel/
+│       └── ...
+└── index.db                          # SQLite index (WAL mode)
+```
+
+## Object Structure
+
+Each store object contains:
+
+### Metadata (`object.json`)
+
+```json
+{
+  "hash": "abc123...",
+  "name": "numpy",
+  "version": "1.26.0",
+  "python_version": "3.12",
+  "abi_tag": "cp312",
+  "platform_tag": "manylinux2014_x86_64",
+  "architecture": "x86_64",
+  "size": 41943040,
+  "file_count": 1247,
+  "created_at": "2024-01-15T10:30:00Z"
+}
+```
+
+### Wheel Contents
+
+The extracted wheel directory contains all files from the original `.whl` file, preserving the wheel's internal structure.
+
+## Content Addressing
+
+### How Hashes Are Computed
+
+```python
+import hashlib
+
+def compute_file_hash(path: Path) -> str:
+    sha256 = hashlib.sha256()
+    with open(path, 'rb') as f:
+        while chunk := f.read(8192):
+            sha256.update(chunk)
+    return sha256.hexdigest()
+```
+
+The hash is computed over the **entire wheel file** before extraction. This ensures:
+- Same wheel = same hash (deterministic)
+- Different wheel = different hash (collision-resistant)
+- Tampered wheel = different hash (integrity verification)
+
+### Directory Naming
+
+Store directories follow the pattern:
+
+```
+{hash}-{abi_tag}-{platform_tag}-{architecture}/
+```
+
+This makes it easy to identify objects at a glance while maintaining content-addressability.
+
+## SQLite Index
+
+UVG maintains a SQLite index with WAL (Write-Ahead Logging) mode for:
+- Fast lookups by package name, version, or hash
+- Concurrent read access
+- ACID transactions
+- Zero configuration
+
+### Schema
+
+```sql
+CREATE TABLE objects (
+    hash TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    version TEXT NOT NULL,
+    python_version TEXT NOT NULL,
+    abi_tag TEXT NOT NULL,
+    platform_tag TEXT NOT NULL,
+    architecture TEXT NOT NULL,
+    size INTEGER NOT NULL,
+    file_count INTEGER NOT NULL,
+    created_at TEXT NOT NULL
+);
+
+CREATE INDEX idx_name ON objects(name);
+CREATE INDEX idx_name_version ON objects(name, version);
+```
+
+## Operations
+
+### Create Object
+
+```bash
+uvg store add path/to/wheel.whl
+```
+
+1. Compute SHA-256 hash of the wheel
+2. Check if object already exists (deduplication)
+3. Extract wheel to store directory
+4. Write metadata
+5. Update SQLite index
+
+### Get Object
+
+```bash
+uvg store get abc123...
+```
+
+1. Look up hash in SQLite index
+2. Verify object directory exists
+3. Return object path and metadata
+
+### Delete Object
+
+```bash
+uvg store remove abc123...
+```
+
+1. Verify object is not referenced by any runtime
+2. Delete object directory
+3. Remove from SQLite index
+
+### List Objects
+
+```bash
+uvg store list
+uvg store list --name numpy
+uvg store list --version 1.26.0
+```
+
+## Immutability
+
+Store objects are **immutable** — once created, they are never modified. This ensures:
+- Fingerprints remain valid
+- Runtimes remain reproducible
+- Integrity checks remain meaningful
+
+If a package needs to be updated, a **new object** is created with a new hash.
+
+## Storage Efficiency
+
+### Deduplication
+
+Because objects are content-addressed, identical wheels are stored only once:
+
+```
+Project A: requests 2.31.0 → abc123 (stored)
+Project B: requests 2.31.0 → abc123 (reused)
+Project C: requests 2.31.0 → abc123 (reused)
+# Total storage: 1 copy, not 3
+```
+
+### Typical Savings
+
+| Scenario | Without UVG | With UVG | Savings |
+|----------|-------------|----------|---------|
+| 5 projects, shared deps | 2.5 GB | 0.8 GB | 68% |
+| 20 projects, shared deps | 10 GB | 2.1 GB | 79% |
+| 50 projects, shared deps | 25 GB | 4.2 GB | 83% |
+
+## Next Steps
+
+- [Runtime Construction](/concepts/runtime/) — How runtimes reference store objects
+- [Fingerprinting](/concepts/fingerprinting/) — How determinism is achieved
+- [Security Model](/architecture/security/) — How integrity is verified

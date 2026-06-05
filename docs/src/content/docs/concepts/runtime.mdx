@@ -1,0 +1,178 @@
+---
+title: Runtime Construction
+description: UVG builds isolated Python runtimes using symlinks to the global store, entry point scripts, and deterministic fingerprinting.
+---
+
+UVG constructs **isolated Python runtimes** for each project using symlinks to the global store. This provides dependency isolation while sharing underlying package content.
+
+## Runtime Layout
+
+```
+project/
+├── pyproject.toml
+└── .uvg/
+    └── runtime/
+        ├── manifest.json          # Runtime metadata
+        ├── site-packages/         # Symlinks to store objects
+        │   ├── numpy → ~/.uvg/store/objects/sha256/abc123.../wheel/numpy
+        │   ├── requests → ~/.uvg/store/objects/sha256/def456.../wheel/requests
+        │   └── ...
+        └── bin/                   # Entry point scripts
+            ├── flask
+            ├── pytest
+            └── ...
+```
+
+## How It Works
+
+### 1. Resolve Dependencies
+
+UVG delegates to UV for dependency resolution:
+
+```bash
+uvg add requests
+# UV resolves: requests 2.31.0 + urllib3 2.1.0 + certifi 2023.11.17 + ...
+```
+
+### 2. Download and Store
+
+UV downloads wheels, UVG stores them in the content-addressable store:
+
+```bash
+# Wheels downloaded and stored:
+~/.uvg/store/objects/sha256/abc123-requests-2.31.0/
+~/.uvg/store/objects/sha256/def456-urllib3-2.1.0/
+~/.uvg/store/objects/sha256/ghi789-certifi-2023.11.17/
+```
+
+### 3. Create Symlinks
+
+UVG creates symlinks from the runtime's `site-packages/` to the store objects:
+
+```python
+# For each package:
+runtime_site_packages / package_name → store_object / wheel / package_name
+```
+
+This is fast (no file copying) and storage-efficient (shared content).
+
+### 4. Generate Entry Points
+
+UVG parses `.dist-info/entry_points.txt` from each wheel and generates executable scripts in `bin/`:
+
+```python
+#!/usr/bin/env python3
+import sys
+sys.path.insert(0, '/path/to/project/.uvg/runtime/site-packages')
+from flask.cli import main
+main()
+```
+
+### 5. Write Manifest
+
+UVG writes a `manifest.json` tracking the runtime state:
+
+```json
+{
+  "fingerprint": "runtime_a1b2c3d4",
+  "python_version": "3.12",
+  "created_at": "2024-01-15T10:30:00Z",
+  "packages": [
+    {
+      "name": "requests",
+      "version": "2.31.0",
+      "hash": "abc123...",
+      "editable": false
+    }
+  ],
+  "entry_points": [
+    {
+      "name": "flask",
+      "module": "flask.cli",
+      "function": "main"
+    }
+  ]
+}
+```
+
+### 6. Compute Fingerprint
+
+UVG computes a SHA-256 fingerprint of the runtime state:
+
+```python
+fingerprint = sha256(
+    sorted_packages +
+    python_version +
+    platform +
+    architecture
+)
+# Result: "runtime_a1b2c3d4"
+```
+
+This fingerprint is used for **deterministic reuse** — if the fingerprint matches a previous build, UVG skips reconstruction.
+
+## Running Code
+
+### Via `uvg run`
+
+```bash
+uvg run python -c "import requests; print(requests.__version__)"
+```
+
+UVG sets up `PYTHONPATH` to point to the runtime's `site-packages/`:
+
+```bash
+PYTHONPATH=/path/to/project/.uvg/runtime/site-packages python -c "..."
+```
+
+### Direct Python
+
+You can also run Python directly with the correct `PYTHONPATH`:
+
+```bash
+export PYTHONPATH=/path/to/project/.uvg/runtime/site-packages
+python -c "import requests; print(requests.__version__)"
+```
+
+## Import Path Construction
+
+UVG uses a **hybrid approach** for import paths:
+
+1. **Symlinks** (primary) — Direct symlinks in `site-packages/`
+2. **`.pth` files** (fallback) — Path configuration files
+3. **`PYTHONPATH`** (wrapper) — Environment variable injection
+
+Symlinks are preferred because they:
+- Work with native Python import machinery
+- Support namespace packages
+- Are fast (OS-level, no Python overhead)
+
+## Idempotency
+
+Runtime construction is **idempotent** — running `uvg sync` multiple times produces the same result:
+
+```bash
+uvg sync  # First build: 1.2s
+uvg sync  # Second build: 0.05s (fingerprint match)
+uvg sync  # Third build: 0.05s (fingerprint match)
+```
+
+## Verification
+
+Verify runtime integrity:
+
+```bash
+uvg verify --runtime
+```
+
+This checks:
+- All symlinks point to valid store objects
+- Manifest matches actual runtime state
+- Entry points are executable
+- Fingerprint is valid
+
+## Next Steps
+
+- [Fingerprinting](/concepts/fingerprinting/) — How determinism is achieved
+- [Dependency Isolation](/concepts/isolation/) — How projects are isolated
+- [CLI: sync](/cli/sync/) — The sync command reference

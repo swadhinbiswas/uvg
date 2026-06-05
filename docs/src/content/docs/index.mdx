@@ -1,0 +1,61 @@
+---
+title: "UVG Documentation"
+description: "UV Global Runtime — Deterministic, reproducible, and isolated Python environments with content-addressable storage and workspace-scale dependency management."
+template: splash
+hero:
+  tagline: Global runtime construction for UV
+  image:
+    file: ../../assets/logo.svg
+  actions:
+    - text: Get Started
+      link: /getting-started/introduction/
+      icon: right-arrow
+    - text: GitHub
+      link: https://github.com/swadhin/uvg
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## Why UVG?
+
+UVG extends [UV](https://docs.astral.sh/uv/) to provide:
+
+- **Content-addressable storage** — Packages stored once, shared across projects
+- **Deterministic runtimes** — SHA-256 fingerprinting for instant reuse
+- **Dependency intelligence** — AST import analysis, unused/missing detection
+- **Workspace mode** — Monorepo discovery, shared dependency tracking
+- **Security verification** — Hash verification, runtime integrity checks
+
+## Quick Start
+
+```bash
+uvg init
+uvg add requests numpy
+uvg sync
+uvg run python -c "import requests; print(requests.__version__)"
+```
+
+## Key Features
+
+<CardGrid stagger>
+	<Card title="Global Store" icon="database">
+		Content-addressable storage with automatic deduplication. Packages stored once, referenced everywhere.
+	</Card>
+	<Card title="Deterministic" icon="refresh">
+		SHA-256 fingerprinting ensures same input always produces same runtime. Instant reuse on fingerprint match.
+	</Card>
+	<Card title="Isolated" icon="shield-check">
+		Each project gets its own isolated runtime. No dependency leakage, no version conflicts.
+	</Card>
+	<Card title="Workspace Mode" icon="grid">
+		Monorepo discovery, shared dependency tracking, and cross-project synchronization.
+	</Card>
+	<Card title="Security" icon="lock">
+		Hash verification, runtime integrity checks, and lockfile validation at every layer.
+	</Card>
+	<Card title="UV Integration" icon="rocket">
+		Delegates to UV for resolution and downloads. Fast resolver without reinventing it.
+	</Card>
+</CardGrid>

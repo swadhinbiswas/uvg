@@ -1,0 +1,92 @@
+---
+title: Migrating from UV
+description: Step-by-step guide to migrating an existing UV project to UVG. Keep your pyproject.toml, gain global storage and deterministic runtimes.
+---
+
+Migrate an existing UV project to UVG in minutes.
+
+## Prerequisites
+
+- Existing UV project with `pyproject.toml`
+- UV installed
+- UVG installed
+
+## Migration Steps
+
+### 1. Install UVG
+
+```bash
+git clone https://github.com/swadhin/uvg.git
+cd uvg
+uv sync
+```
+
+### 2. Initialize UVG in Your Project
+
+```bash
+cd your-project
+uvg init
+```
+
+This creates the `.uvg/` directory. Your existing `pyproject.toml` is preserved.
+
+### 3. Parse UV Lockfile
+
+If you have a `uv.lock` file, UVG will parse it automatically on sync:
+
+```bash
+uvg sync
+```
+
+UVG reads the lockfile, resolves package identities, and populates the store.
+
+### 4. Verify Migration
+
+```bash
+uvg doctor
+uvg verify
+```
+
+### 5. Update CI/CD
+
+Replace `uv run` with `uvg run` in your CI/CD pipeline:
+
+```diff
+- uv run pytest
++ uvg run pytest
+```
+
+## What Changes
+
+| Before (UV) | After (UVG) |
+|-------------|-------------|
+| `.venv/` | `.uvg/runtime/` |
+| `uv sync` | `uvg sync` |
+| `uv run` | `uvg run` |
+| Per-project storage | Global content-addressable store |
+| No fingerprinting | Deterministic fingerprinting |
+| No workspace mode | Full workspace support |
+
+## What Stays the Same
+
+- `pyproject.toml` format
+- Dependency resolution (delegates to UV)
+- Lockfile format (UVG extends it)
+- Python execution
+
+## Rollback
+
+To roll back to UV:
+
+```bash
+rm -rf .uvg/
+uv sync
+uv run pytest
+```
+
+Your `pyproject.toml` and `uv.lock` are unchanged.
+
+## Next Steps
+
+- [Workspace Setup](/guides/workspace/) — Set up workspace mode
+- [CI/CD Integration](/guides/ci-cd/) — Optimize your pipeline

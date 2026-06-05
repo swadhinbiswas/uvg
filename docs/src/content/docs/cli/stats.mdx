@@ -1,0 +1,88 @@
+---
+title: uvg stats
+description: Display storage and runtime statistics including object count, total size, deduplication ratio, and sharing statistics.
+---
+
+Display statistics about your UVG store and runtimes.
+
+## Usage
+
+```bash
+uvg stats [options]
+```
+
+## Options
+
+| Option | Description |
+|--------|-------------|
+| `--json` | Output as JSON |
+| `--human-readable` | Human-readable sizes (default: true) |
+
+## What It Shows
+
+### Store Statistics
+
+- Total objects
+- Total size on disk
+- Deduplication ratio
+- Largest packages
+
+### Runtime Statistics
+
+- Total runtimes
+- Average packages per runtime
+- Most shared packages
+
+## Examples
+
+### Basic Stats
+
+```bash
+uvg stats
+```
+
+```
+Store Statistics
+================
+Total objects: 47
+Total size: 1.2 GB
+Deduplication ratio: 3.2x
+Saved: 2.4 GB
+
+Runtime Statistics
+==================
+Total runtimes: 12
+Average packages: 23
+Most shared: requests (12), numpy (10), pandas (8)
+```
+
+### JSON Output
+
+```bash
+uvg stats --json
+```
+
+```json
+{
+  "store": {
+    "total_objects": 47,
+    "total_size_bytes": 1200000000,
+    "deduplication_ratio": 3.2,
+    "saved_bytes": 2400000000
+  },
+  "runtimes": {
+    "total": 12,
+    "average_packages": 23,
+    "most_shared": [
+      {"name": "requests", "count": 12},
+      {"name": "numpy", "count": 10},
+      {"name": "pandas", "count": 8}
+    ]
+  }
+}
+```
+
+## Next Steps
+
+- [uvg workspace stats](/cli/workspace/) — Workspace-level statistics
+- [Store Architecture](/architecture/store/) — How storage works

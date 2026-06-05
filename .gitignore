@@ -49,3 +49,8 @@ htmlcov/
 *.egg-info/
 dist/
 build/
+
+# Documentation (built separately)
+docs/node_modules/
+docs/dist/
+docs/.astro/

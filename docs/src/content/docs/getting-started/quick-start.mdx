@@ -1,0 +1,74 @@
+---
+title: Quick Start
+description: Get up and running with UVG in 5 minutes. Create a project, add dependencies, and run your code.
+---
+
+Get up and running with UVG in under 5 minutes.
+
+## 1. Initialize a Project
+
+Create a new UVG project in your working directory:
+
+```bash
+uvg init
+```
+
+This creates:
+- `pyproject.toml` — Project configuration
+- `.uvg/` — UVG runtime directory
+
+## 2. Add Dependencies
+
+Add packages using UVG's CLI (delegates to UV for resolution):
+
+```bash
+uvg add requests
+uvg add numpy pandas
+```
+
+UVG resolves dependencies via UV, downloads wheels, and stores them in the global content-addressable store.
+
+## 3. Sync Runtime
+
+Build the isolated runtime for your project:
+
+```bash
+uvg sync
+```
+
+This creates symlinks from your project's `.uvg/runtime/site-packages/` to the global store and generates a deterministic fingerprint.
+
+## 4. Run Your Code
+
+Execute Python with the UVG runtime:
+
+```bash
+uvg run python -c "import requests; print(requests.__version__)"
+```
+
+UVG sets up `PYTHONPATH` to point to your isolated runtime, so only declared dependencies are visible.
+
+## 5. Verify Security
+
+Check that everything is intact:
+
+```bash
+uvg verify
+```
+
+This verifies store object hashes, runtime integrity, and lockfile validity.
+
+## What Happened?
+
+1. **Resolution** — UV resolved `requests` and its dependencies
+2. **Download** — Wheels were downloaded and stored in `~/.uvg/store/`
+3. **Indexing** — Store index (SQLite) was updated with metadata
+4. **Runtime** — Symlinks were created in `.uvg/runtime/site-packages/`
+5. **Fingerprint** — A deterministic fingerprint was computed for reuse
+6. **Manifest** — A manifest was written tracking all packages
+
+## Next Steps
+
+- [CLI Reference](/cli/overview/) — Explore all UVG commands
+- [Core Concepts](/concepts/package-identity/) — Understand how UVG works
+- [Guides](/guides/migration/) — Migrate an existing UV project

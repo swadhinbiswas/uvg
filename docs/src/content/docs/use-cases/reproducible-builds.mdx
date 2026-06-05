@@ -1,0 +1,124 @@
+---
+title: Reproducible Builds
+description: Achieve bit-for-bit reproducible Python environments with UVG's deterministic fingerprinting and content-addressable storage.
+---
+
+UVG enables **bit-for-bit reproducible** Python environments through deterministic fingerprinting and content-addressable storage.
+
+## What Is Reproducibility?
+
+A reproducible build means:
+- Same input → same output, every time
+- Same dependencies → same runtime, on any machine
+- Same fingerprint → same environment, verified
+
+## How UVG Achieves Reproducibility
+
+### 1. Content-Addressable Storage
+
+Packages are identified by SHA-256 hash:
+
+```
+Same wheel → Same hash → Same store object
+```
+
+### 2. Deterministic Fingerprinting
+
+Runtime fingerprints are computed from sorted, canonical input:
+
+```python
+fingerprint = sha256(sorted_packages + python_version + platform)
+```
+
+Same input always produces the same fingerprint.
+
+### 3. Lockfile Pinning
+
+UVG uses UV's lockfile to pin exact versions:
+
+```json
+{
+  "version": 1,
+  "packages": [
+    {"name": "requests", "version": "2.31.0", "hash": "abc123..."},
+    {"name": "numpy", "version": "1.26.0", "hash": "def456..."}
+  ]
+}
+```
+
+### 4. Symlink-Based Runtimes
+
+Runtimes are constructed from symlinks to immutable store objects. No file copying, no timestamp variation.
+
+## Verification
+
+### Verify Reproducibility
+
+```bash
+# Machine A
+uvg sync
+uvg verify
+# Fingerprint: runtime_a1b2c3d4
+
+# Machine B (same pyproject.toml, same lockfile)
+uvg sync
+uvg verify
+# Fingerprint: runtime_a1b2c3d4 (same!)
+```
+
+### Verify Integrity
+
+```bash
+uvg verify --strict
+```
+
+This verifies:
+- Store object hashes match
+- Runtime symlinks are valid
+- Fingerprint is correct
+- Lockfile is consistent
+
+## CI/CD Reproducibility
+
+### Pin Everything
+
+```yaml
+- name: Sync runtime
+  run: uvg sync
+
+- name: Verify reproducibility
+  run: uvg verify --strict
+```
+
+### Cache the Store
+
+```yaml
+- name: Cache UVG store
+  uses: actions/cache@v4
+  with:
+    path: ~/.uvg/store
+    key: uvg-store-${{ hashFiles('pyproject.toml', 'uv.lock') }}
+```
+
+## Reproducibility Checklist
+
+- [ ] Lockfile committed to version control
+- [ ] Store cached in CI/CD
+- [ ] `uvg verify --strict` passes in CI
+- [ ] Same fingerprint across machines
+- [ ] No floating dependencies
+
+## Comparison
+
+| Tool | Reproducible? | How |
+|------|--------------|-----|
+| pip + requirements.txt | Partial | Version pins only |
+| pipenv | Partial | Lockfile, no fingerprinting |
+| poetry | Partial | Lockfile, no fingerprinting |
+| uv | Good | Lockfile, fast resolution |
+| **uvg** | **Excellent** | **Lockfile + fingerprinting + content-addressable** |
+
+## Next Steps
+
+- [Fingerprinting](/concepts/fingerprinting/) — How determinism works
+- [Security Model](/architecture/security/) — How integrity is verified

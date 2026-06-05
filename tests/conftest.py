@@ -7,14 +7,6 @@ from pathlib import Path
 
 import pytest
 
-from uvg.store.store import Store
-
-
-@pytest.fixture
-def tmp_store(tmp_path: Path) -> Store:
-    """Create a temporary store for testing."""
-    return Store(store_path=tmp_path / "store")
-
 
 @pytest.fixture
 def sample_wheel(tmp_path: Path) -> Path:

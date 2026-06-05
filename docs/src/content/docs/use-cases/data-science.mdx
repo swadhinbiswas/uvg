@@ -1,0 +1,149 @@
+---
+title: Data Science Workflows
+description: Manage large Python dependency trees for data science projects. UVG's deduplication saves gigabytes when multiple projects share numpy, pandas, and scikit-learn.
+---
+
+UVG is ideal for data science workflows with large dependency trees and shared packages.
+
+## The Challenge
+
+Data science projects typically have:
+- Large packages (numpy, pandas, scikit-learn, tensorflow, pytorch)
+- Many projects sharing the same packages
+- GPU-specific wheels (CUDA versions)
+- Long installation times
+- Storage-heavy virtual environments
+
+## UVG's Solution
+
+### Massive Deduplication
+
+Data science packages are large. Storing them once instead of per-project saves gigabytes:
+
+```
+Without UVG:
+  project-a/.venv/  numpy (40 MB) + pandas (30 MB) + scikit-learn (25 MB) = 95 MB
+  project-b/.venv/  numpy (40 MB) + pandas (30 MB) + matplotlib (20 MB) = 90 MB
+  project-c/.venv/  numpy (40 MB) + tensorflow (500 MB) = 540 MB
+  Total: 725 MB
+
+With UVG:
+  Store:  numpy (40 MB) + pandas (30 MB) + scikit-learn (25 MB) + matplotlib (20 MB) + tensorflow (500 MB) = 615 MB
+  Runtimes: 3 × symlinks (~0 MB)
+  Total: 615 MB (15% savings)
+
+With 10 projects:
+  Without UVG: 7.25 GB
+  With UVG: 615 MB (92% savings)
+```
+
+### GPU-Specific Wheels
+
+UVG's 7-tuple identity model handles GPU-specific wheels correctly:
+
+```python
+# CUDA 11.8
+PackageIdentity(
+    name="torch",
+    version="2.1.0",
+    python_version="3.12",
+    abi_tag="cp312",
+    platform_tag="manylinux2014_x86_64",
+    architecture="x86_64",
+    wheel_hash="cuda118...",
+)
+
+# CUDA 12.1
+PackageIdentity(
+    name="torch",
+    version="2.1.0",
+    python_version="3.12",
+    abi_tag="cp312",
+    platform_tag="manylinux2014_x86_64",
+    architecture="x86_64",
+    wheel_hash="cuda121...",
+)
+```
+
+### Fast Environment Setup
+
+```bash
+# First project: download and store
+uvg sync  # 30s (downloading large wheels)
+
+# Second project: reuse store
+uvg sync  # 0.5s (symlinks only)
+
+# Third project: reuse store
+uvg sync  # 0.5s (symlinks only)
+```
+
+## Example Workflow
+
+### 1. Create Data Science Project
+
+```bash
+mkdir data-project && cd data-project
+uvg init
+uvg add numpy pandas scikit-learn matplotlib jupyter
+uvg sync
+```
+
+### 2. Run Jupyter
+
+```bash
+uvg run jupyter notebook
+```
+
+### 3. Share with Team
+
+Team members get the same environment:
+
+```bash
+git clone {'<repo>'}
+uvg sync  # Uses cached store if available
+uvg run jupyter notebook
+```
+
+## CI/CD for Data Science
+
+```yaml
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install UV
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+      - name: Install UVG
+        run: |
+          git clone https://github.com/swadhin/uvg.git
+          cd uvg && uv sync
+
+      - name: Cache UVG store
+        uses: actions/cache@v4
+        with:
+          path: ~/.uvg/store
+          key: uvg-store-${{ hashFiles('pyproject.toml') }}
+
+      - name: Sync runtime
+        run: uvg sync
+
+      - name: Run tests
+        run: uvg run pytest
+```
+
+## Best Practices
+
+1. **Cache the store** — Data science packages are large
+2. **Use workspace mode** — Share packages across projects
+3. **Pin versions** — Ensure reproducibility
+4. **Verify integrity** — Run `uvg verify` before experiments
+5. **Monitor storage** — Use `uvg stats` to track usage
+
+## Next Steps
+
+- [Workspace Setup](/guides/workspace/) — Share packages across projects
+- [Performance Tuning](/guides/performance/) — Optimize build times

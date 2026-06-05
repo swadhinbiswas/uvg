@@ -1,0 +1,205 @@
+---
+title: CI/CD Integration
+description: Integrate UVG into your CI/CD pipeline for fast, reproducible builds. Cache the global store across runs.
+---
+
+Integrate UVG into your CI/CD pipeline for fast, reproducible builds.
+
+## GitHub Actions
+
+### Basic Setup
+
+```yaml
+name: CI
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install UV
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+      - name: Install UVG
+        run: |
+          git clone https://github.com/swadhin/uvg.git
+          cd uvg
+          uv sync
+
+      - name: Cache UVG store
+        uses: actions/cache@v4
+        with:
+          path: ~/.uvg/store
+          key: uvg-store-${{ runner.os }}-${{ hashFiles('**/pyproject.toml') }}
+          restore-keys: |
+            uvg-store-${{ runner.os }}-
+
+      - name: Sync runtime
+        run: uvg sync
+
+      - name: Run tests
+        run: uvg run pytest
+```
+
+### Matrix Testing
+
+```yaml
+jobs:
+  test:
+    strategy:
+      matrix:
+        python: ['3.10', '3.11', '3.12']
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install UV
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+      - name: Install UVG
+        run: |
+          git clone https://github.com/swadhin/uvg.git
+          cd uvg
+          uv sync
+
+      - name: Cache UVG store
+        uses: actions/cache@v4
+        with:
+          path: ~/.uvg/store
+          key: uvg-store-${{ matrix.os }}-${{ matrix.python }}-${{ hashFiles('**/pyproject.toml') }}
+
+      - name: Sync runtime
+        run: uvg sync
+
+      - name: Run tests
+        run: uvg run pytest
+```
+
+### Workspace CI/CD
+
+```yaml
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install UV
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+      - name: Install UVG
+        run: |
+          git clone https://github.com/swadhin/uvg.git
+          cd uvg
+          uv sync
+
+      - name: Cache UVG store
+        uses: actions/cache@v4
+        with:
+          path: ~/.uvg/store
+          key: uvg-store-${{ hashFiles('**/pyproject.toml') }}
+
+      - name: Sync workspace
+        run: uvg workspace sync
+
+      - name: Run workspace doctor
+        run: uvg workspace doctor
+
+      - name: Run tests
+        run: |
+          uvg run pytest services/api/
+          uvg run pytest services/worker/
+```
+
+## GitLab CI
+
+```yaml
+stages:
+  - test
+
+test:
+  image: python:3.12
+  cache:
+    key: uvg-store
+    paths:
+      - ~/.uvg/store
+  before_script:
+    - curl -LsSf https://astral.sh/uv/install.sh | sh
+    - git clone https://github.com/swadhin/uvg.git
+    - cd uvg && uv sync && cd ..
+  script:
+    - uvg sync
+    - uvg run pytest
+```
+
+## CircleCI
+
+```yaml
+version: 2.1
+jobs:
+  test:
+    docker:
+      - image: cimg/python:3.12
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - uvg-store-{{ checksum "pyproject.toml" }}
+      - run:
+          name: Install UV
+          command: curl -LsSf https://astral.sh/uv/install.sh | sh
+      - run:
+          name: Install UVG
+          command: |
+            git clone https://github.com/swadhin/uvg.git
+            cd uvg && uv sync
+      - run:
+          name: Sync runtime
+          command: uvg sync
+      - save_cache:
+          key: uvg-store-{{ checksum "pyproject.toml" }}
+          paths:
+            - ~/.uvg/store
+      - run:
+          name: Run tests
+          command: uvg run pytest
+```
+
+## Caching Strategy
+
+### What to Cache
+
+| Path | Reason |
+|------|--------|
+| `~/.uvg/store` | Global package store (shared across projects) |
+| `~/.uvg/store/index.db` | SQLite index (fast lookups) |
+
+### What Not to Cache
+
+| Path | Reason |
+|------|--------|
+| `.uvg/runtime/` | Rebuild from store on each run |
+| `.venv/` | Not used by UVG |
+
+### Cache Keys
+
+Use a hash of `pyproject.toml` for precise cache invalidation:
+
+```
+uvg-store-${{ hashFiles('**/pyproject.toml') }}
+```
+
+## Performance Tips
+
+1. **Cache the store** — Avoid re-downloading packages
+2. **Use workspace sync** — Sync all projects in parallel
+3. **Verify in CI** — Run `uvg verify` to catch corruption
+4. **Run doctor** — Run `uvg workspace doctor` for monorepos
+
+## Next Steps
+
+- [Offline Mode](/guides/offline/) — Run without network access
+- [Performance Tuning](/guides/performance/) — Optimize build times

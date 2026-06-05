@@ -1,0 +1,337 @@
+---
+title: UV Configuration
+description: UVG parses and respects UV's tool.uv configuration including workspace, sources, overrides, constraints, resolution strategy, fork strategy, dependency metadata, and conflicts.
+---
+
+UVG parses `tool.uv` sections from `pyproject.toml` and delegates configuration to UV during resolution.
+
+## Workspace Configuration
+
+Define a workspace with multiple projects:
+
+```toml
+[tool.uv.workspace]
+members = ["packages/*", "libs/*"]
+exclude = ["packages/seeds"]
+```
+
+UVG discovers workspace members and syncs their runtimes together.
+
+## Dependency Sources
+
+Define where dependencies come from:
+
+```toml
+[tool.uv.sources]
+# Workspace dependency (editable)
+bird-feeder = { workspace = true }
+
+# Path dependency
+my-lib = { path = "../my-lib", editable = true }
+
+# Git dependency
+tqdm = { git = "https://github.com/tqdm/tqdm", tag = "v1.0.0" }
+
+# URL dependency
+my-pkg = { url = "https://example.com/my-pkg.whl" }
+
+# Registry dependency (default)
+requests = {}
+```
+
+### Source Types
+
+| Type | Key | Description |
+|------|-----|-------------|
+| Workspace | `workspace = true` | Editable workspace member |
+| Path | `path = "..."` | Local directory or wheel |
+| Git | `git = "..."` | Git repository |
+| URL | `url = "..."` | Direct URL to wheel |
+| Registry | `{}` | PyPI or custom index |
+
+## Resolution Strategy
+
+Control how UV resolves versions:
+
+```toml
+[tool.uv]
+resolution = "highest"  # Default: use latest versions
+# resolution = "lowest"         # Use lowest compatible versions
+# resolution = "lowest-direct"  # Lowest for direct deps, latest for transitive
+```
+
+## Fork Strategy
+
+Control multi-version resolution behavior:
+
+```toml
+[tool.uv]
+fork-strategy = "requires-python"  # Default: optimize for latest per Python version
+# fork-strategy = "fewest"         # Minimize number of selected versions
+```
+
+### Fork Strategy Options
+
+| Strategy | Description |
+|----------|-------------|
+| `requires-python` | Select latest version for each Python version range |
+| `fewest` | Minimize total versions selected across platforms |
+
+## Pre-release Handling
+
+```toml
+[tool.uv]
+prerelease = "if-needed"  # Default: allow if needed
+# prerelease = "disallow"  # Never allow pre-releases
+# prerelease = "allow"     # Allow all pre-releases
+# prerelease = "explicit"  # Only allow if explicitly requested
+```
+
+## Dependency Overrides
+
+Override dependency metadata when resolution fails:
+
+```toml
+[tool.uv]
+override-dependencies = [
+    "pydantic>=2.0",
+    "numpy>=1.24 ; sys_platform == 'linux'",
+]
+```
+
+Overrides replace declared requirements for the specified packages.
+
+## Constraint Dependencies
+
+Narrow acceptable versions for transitive dependencies:
+
+```toml
+[tool.uv]
+constraint-dependencies = [
+    "urllib3<2.0",
+    "requests>=2.28",
+]
+```
+
+Constraints only take effect if a package is already pulled in as a dependency.
+
+## Dependency Metadata
+
+Provide static metadata for packages that lack it:
+
+```toml
+[[tool.uv.dependency-metadata]]
+name = "chumpy"
+version = "0.70"
+requires-dist = ["numpy>=1.8.1", "scipy>=0.13.0"]
+requires-python = ">=3.8"
+provides-extra = ["dev"]
+```
+
+This is useful for:
+- Packages without static metadata
+- Packages that require custom build environments
+- Git dependencies without published metadata
+
+## Conflicting Dependencies
+
+Declare incompatible extras or dependency groups:
+
+```toml
+[tool.uv]
+conflicts = [
+    [
+        { extra = "extra1" },
+        { extra = "extra2" },
+    ],
+]
+```
+
+For workspace members:
+
+```toml
+[tool.uv]
+conflicts = [
+    [
+        { package = "member1", extra = "extra1" },
+        { package = "member2", extra = "extra2" },
+    ],
+]
+```
+
+For dependency groups:
+
+```toml
+[tool.uv]
+conflicts = [
+    [
+        { group = "group1" },
+        { group = "group2" },
+    ],
+]
+```
+
+## Dependency Groups (PEP 735)
+
+Define dependency groups for different development workflows:
+
+```toml
+[dependency-groups]
+test = ["pytest>=8.0", "pytest-cov>=5.0"]
+lint = ["ruff>=0.4", "mypy>=1.8"]
+docs = ["sphinx", "sphinx-rtd-theme"]
+dev = ["pytest>=8.0", "ruff>=0.4", "mypy>=1.8"]
+```
+
+Sync specific groups:
+
+```bash
+uvg sync --group test
+uvg sync --group test --group lint
+uvg sync --all-groups
+```
+
+Add to a group:
+
+```bash
+uvg add pytest --group test
+```
+
+### Group Resolution
+
+Groups are resolved together with project dependencies, ensuring compatibility:
+
+```toml
+[project]
+dependencies = ["flask>=3.0"]
+
+[dependency-groups]
+test = ["pytest>=8.0", "flask-testing"]  # Must be compatible with flask>=3.0
+```
+
+## Build Isolation Control
+
+Disable build isolation for packages that need custom build environments:
+
+```toml
+[tool.uv]
+no-build-isolation = ["flash-attn", "triton"]
+```
+
+Or for specific packages:
+
+```toml
+[tool.uv]
+no-build-isolation-package = ["flash-attn"]
+```
+
+This is useful for:
+- Packages requiring pre-installed build dependencies
+- Packages with custom build scripts
+- Packages that need access to the project environment during build
+
+## Reproducible Resolutions
+
+Limit resolution to packages before a specific date:
+
+```toml
+[tool.uv]
+exclude-newer = "2024-01-01"
+# Or use a duration
+# exclude-newer = "1 week"
+```
+
+## Environment Constraints
+
+Limit which platforms to resolve for:
+
+```toml
+[tool.uv]
+environments = [
+    "sys_platform == 'darwin'",
+    "sys_platform == 'linux'",
+]
+```
+
+Require wheels for specific platforms:
+
+```toml
+[tool.uv]
+required-environments = [
+    "sys_platform == 'darwin' and platform_machine == 'x86_64'",
+]
+```
+
+## Authentication & TLS
+
+Configure private registries and TLS certificates:
+
+```toml
+[[tool.uv.index]]
+name = "private"
+url = "https://private.example.com/simple"
+default = true
+```
+
+### Multiple Registries
+
+```toml
+[[tool.uv.index]]
+name = "pypi"
+url = "https://pypi.org/simple"
+default = true
+
+[[tool.uv.index]]
+name = "internal"
+url = "https://internal.example.com/simple"
+explicit = true
+```
+
+### TLS Certificates
+
+```toml
+[tool.uv]
+tls-ca-certificates = ["/etc/ssl/certs/ca.pem", "/etc/ssl/certs/custom.pem"]
+tls-client-cert = "/etc/ssl/certs/client.pem"
+tls-client-key = "/etc/ssl/private/client.key"
+tls-no-verify = false
+```
+
+### Keyring Integration
+
+```toml
+[tool.uv]
+keyring-provider = "secret"
+```
+
+## UVG Integration
+
+UVG parses all `tool.uv` configuration and passes it to UV during resolution:
+
+```bash
+uvg sync  # Respects tool.uv.resolution, overrides, constraints, etc.
+uvg sync --group test  # Sync with specific dependency group
+uvg sync --all-groups  # Sync with all dependency groups
+```
+
+The runtime manifest tracks which configuration was used:
+
+```json
+{
+  "fingerprint": "runtime_a1b2c3d4",
+  "overrides": [{"name": "pydantic", "specifier": ">=2.0"}],
+  "constraints": [{"name": "urllib3", "specifier": "<2.0"}],
+  "resolution_strategy": "highest",
+  "fork_strategy": "requires-python",
+  "dependency_groups": ["test", "lint"],
+  "no_build_isolation": ["flash-attn"],
+  "registries": [{"name": "private", "url": "https://private.example.com/simple", "default": true}],
+  "tls_ca_certificates": ["/etc/ssl/certs/ca.pem"]
+}
+```
+
+## Next Steps
+
+- [Workspace Setup](/guides/workspace/) — Set up workspace mode
+- [CLI: sync](/cli/sync/) — Sync with configuration
+- [Resolution](/concepts/resolution/) — How resolution works

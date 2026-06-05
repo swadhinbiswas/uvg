@@ -1,0 +1,96 @@
+---
+title: "Architecture Overview"
+description: "UVG architecture: core models, content-addressable store, runtime construction, dependency intelligence, workspace mode, security verification, and UV integration."
+---
+
+UVG is built as a layered architecture on top of UV.
+
+## High-Level Architecture
+
+```
+┌─────────────────────────────────────────────────────┐
+│                    UVG CLI                          │
+│  init │ add │ remove │ sync │ run │ doctor │ scan   │
+│  verify │ stats │ info │ store │ workspace           │
+├─────────────────────────────────────────────────────┤
+│                 Core Layer                          │
+│  Models │ Exceptions │ Package Identity (7-tuple)   │
+├─────────────────────────────────────────────────────┤
+│  Store        │ Runtime      │ Intelligence         │
+│  Content-     │ Construction │ AST Analysis         │
+│  Addressable  │ Fingerprint  │ Scanner              │
+│  SQLite Index │ Manifest     │ Import Map           │
+├─────────────────────────────────────────────────────┤
+│  Workspace      │ Security     │ UV Integration      │
+│  Discovery      │ Verification │ Resolution Delegate │
+│  Manager        │ Hash Check   │ Lockfile Parser     │
+│  Sync/Doctor    │ Integrity    │ Wheel Download      │
+├─────────────────────────────────────────────────────┤
+│                    UV                               │
+│  Resolver │ Downloader │ Lockfile │ Virtual Env     │
+└─────────────────────────────────────────────────────┘
+```
+
+## Layers
+
+### Core Layer
+
+- **Models** — Package identity, version, wheel info
+- **Exceptions** — Typed error hierarchy
+- **Package Identity** — 7-tuple identity model
+
+### Store Layer
+
+- **Content-Addressable Store** — Immutable, hash-addressed objects
+- **SQLite Index** — WAL mode, concurrent reads, ACID transactions
+- **Object Metadata** — Package info, size, file count
+
+### Runtime Layer
+
+- **Runtime Construction** — Symlink-based import paths
+- **Fingerprinting** — Deterministic SHA-256 fingerprints
+- **Manifest** — Runtime state tracking
+- **Entry Points** — Executable script generation
+
+### Intelligence Layer
+
+- **AST Analysis** — Parse Python imports
+- **Scanner** — Project-wide import detection
+- **Import Map** — Module-to-package mapping
+- **Reports** — Unused/missing dependency detection
+
+### Workspace Layer
+
+- **Discovery** — Monorepo project detection
+- **Manager** — Cross-project synchronization
+- **Dependency Graph** — Shared dependency tracking
+- **Stats** — Storage and sharing metrics
+
+### Security Layer
+
+- **Hash Verification** — Store object integrity
+- **Runtime Integrity** — Symlink and fingerprint validation
+- **Lockfile Validation** — Format and hash checks
+- **Verification Reports** — Comprehensive security status
+
+### UV Integration Layer
+
+- **Resolution Delegate** — Delegate to UV for dependency resolution
+- **Lockfile Parser** — Parse UV lockfiles
+- **Wheel Download** — Delegate to UV for downloads
+- **Add/Remove** — UV-backed dependency management
+
+## Design Principles
+
+1. **Delegate to UV** — Don't reinvent resolution or downloads
+2. **Content-addressable** — Immutable, hash-addressed storage
+3. **Deterministic** — Same input → same output
+4. **Isolated** — Projects see only declared dependencies
+5. **Secure** — Hash verification at every layer
+6. **Scalable** — Workspace mode for monorepos
+
+## Next Steps
+
+- [Store Architecture](/architecture/store/) — Deep dive into storage
+- [Runtime Architecture](/architecture/runtime/) — Deep dive into runtimes
+- [Security Model](/architecture/security/) — Deep dive into security

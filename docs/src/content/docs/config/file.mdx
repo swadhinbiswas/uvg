@@ -1,0 +1,61 @@
+---
+title: Configuration File
+description: Configure UVG via pyproject.toml, environment variables, and the UVG configuration file.
+---
+
+UVG configuration is managed through multiple sources.
+
+## pyproject.toml
+
+UVG reads project configuration from `pyproject.toml`:
+
+```toml
+[project]
+name = "my-project"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+    "requests>=2.28.0",
+    "numpy>=1.24.0",
+]
+
+[tool.uvg]
+store-path = "~/.uvg/store"
+python-version = "3.12"
+```
+
+## Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `UVG_STORE` | Store location | `~/.uvg/store` |
+| `UVG_PYTHON` | Python version | Current Python |
+| `UVG_VERBOSE` | Verbose output | `false` |
+| `UV_INDEX_URL` | Package index URL | PyPI |
+| `UV_EXTRA_INDEX_URLS` | Additional indexes | None |
+| `UV_CACHE_DIR` | UV cache directory | `~/.cache/uv` |
+
+## UV Configuration
+
+UVG respects UV's configuration in `~/.config/uv/uv.toml`:
+
+```toml
+[[index]]
+url = "https://pypi.mycompany.com/simple"
+default = true
+
+[[index]]
+url = "https://pypi.org/simple"
+```
+
+## Precedence
+
+1. Environment variables (highest)
+2. `pyproject.toml` `[tool.uvg]` section
+3. UV configuration
+4. Defaults (lowest)
+
+## Next Steps
+
+- [Environment Variables](/config/env/) — Full environment variable reference
+- [Store Location](/config/store-location/) — Configure store path

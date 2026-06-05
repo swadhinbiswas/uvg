@@ -128,6 +128,9 @@ class RuntimeManifest:
     packages: dict[str, ManifestPackage] = field(default_factory=dict)
     entry_points: dict[str, ManifestEntryPoint] = field(default_factory=dict)
     created_at: str = ""
+    overrides: list[dict[str, str]] = field(default_factory=list)
+    constraints: list[dict[str, str]] = field(default_factory=list)
+    resolution_strategy: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary.
@@ -135,7 +138,7 @@ class RuntimeManifest:
         Returns:
             Dictionary representation.
         """
-        return {
+        result: dict[str, Any] = {
             "version": self.version,
             "fingerprint": self.fingerprint,
             "python_version": self.python_version,
@@ -146,6 +149,13 @@ class RuntimeManifest:
             "packages": {name: pkg.to_dict() for name, pkg in self.packages.items()},
             "entry_points": {name: ep.to_dict() for name, ep in self.entry_points.items()},
         }
+        if self.overrides:
+            result["overrides"] = self.overrides
+        if self.constraints:
+            result["constraints"] = self.constraints
+        if self.resolution_strategy:
+            result["resolution_strategy"] = self.resolution_strategy
+        return result
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> RuntimeManifest:
@@ -171,6 +181,9 @@ class RuntimeManifest:
             created_at=data.get("created_at", ""),
             packages=packages,
             entry_points=entry_points,
+            overrides=data.get("overrides", []),
+            constraints=data.get("constraints", []),
+            resolution_strategy=data.get("resolution_strategy", ""),
         )
 
     def to_json(self) -> str:

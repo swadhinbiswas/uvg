@@ -1,0 +1,159 @@
+---
+title: "Security Model"
+description: "UVG security model: hash verification, runtime integrity checks, lockfile validation, and tamper detection."
+---
+
+UVG provides multi-layer security verification for packages, runtimes, and lockfiles.
+
+## Threat Model
+
+UVG protects against:
+
+1. **Tampered wheels** — Modified package content
+2. **Store corruption** — Corrupted or deleted store objects
+3. **Runtime modification** — Unauthorized changes to runtimes
+4. **Lockfile tampering** — Modified lockfile content
+5. **Import leakage** — Undeclared dependencies
+
+## Verification Layers
+
+### 1. Store Verification
+
+Recomputes SHA-256 hash of each wheel file:
+
+```python
+def verify_store_object(obj: StoreObject) -> bool:
+    actual_hash = compute_file_hash(obj.wheel_path)
+    return actual_hash == obj.metadata.hash
+```
+
+### 2. Runtime Verification
+
+Checks runtime integrity:
+
+```python
+def verify_runtime(runtime: Runtime) -> VerificationReport:
+    report = VerificationReport()
+    
+    # Check all symlinks point to valid store objects
+    for pkg in runtime.packages:
+        if not pkg.symlink.exists():
+            report.fail(f"Broken symlink: {pkg.name}")
+        if not pkg.symlink.resolve().exists():
+            report.fail(f"Missing store object: {pkg.name}")
+    
+    # Check fingerprint matches
+    actual_fp = compute_fingerprint(runtime.packages)
+    if actual_fp != runtime.manifest.fingerprint:
+        report.fail("Fingerprint mismatch")
+    
+    return report
+```
+
+### 3. Lockfile Verification
+
+Validates lockfile format and hash:
+
+```python
+def verify_lockfile(lockfile: UVGLockfile) -> bool:
+    # Check format
+    if not lockfile.is_valid_format():
+        return False
+    
+    # Check hash
+    actual_hash = lockfile.compute_hash()
+    return actual_hash == lockfile.stored_hash
+```
+
+## Verification Report
+
+```python
+@dataclass
+class VerificationReport:
+    checks: list[CheckResult]
+    
+    @property
+    def passed(self) -> bool:
+        return all(c.status == "pass" for c in self.checks)
+    
+    @property
+    def has_warnings(self) -> bool:
+        return any(c.status == "warning" for c in self.checks)
+    
+    @property
+    def failure_count(self) -> int:
+        return sum(1 for c in self.checks if c.status == "fail")
+```
+
+## Usage
+
+### Full Verification
+
+```bash
+uvg verify
+```
+
+### Store Only
+
+```bash
+uvg verify --store
+```
+
+### Runtime Only
+
+```bash
+uvg verify --runtime
+```
+
+### Strict Mode
+
+```bash
+uvg verify --strict
+```
+
+Fails on any warning, not just failures.
+
+## Security Best Practices
+
+1. **Verify before execution** — Run `uvg verify` before `uvg run`
+2. **Verify in CI/CD** — Add `uvg verify --strict` to your pipeline
+3. **Monitor store integrity** — Run `uvg verify --store` periodically
+4. **Check runtimes** — Run `uvg doctor` regularly
+5. **Use strict mode** — `uvg verify --strict` for production
+
+## Response to Verification Failure
+
+### Store Hash Mismatch
+
+```bash
+# Object may be corrupted or tampered with
+uvg store remove {'<hash>'}
+uvg sync  # Re-download
+```
+
+### Runtime Symlink Broken
+
+```bash
+# Store object may have been deleted
+uvg sync  # Rebuild runtime
+```
+
+### Fingerprint Mismatch
+
+```bash
+# Runtime was modified outside UVG
+rm -rf .uvg/runtime
+uvg sync  # Rebuild from scratch
+```
+
+### Lockfile Hash Mismatch
+
+```bash
+# Lockfile was modified
+uvg sync  # Regenerate lockfile
+```
+
+## Next Steps
+
+- [CLI: verify](/cli/verify/) — Verification command reference
+- [Architecture Overview](/architecture/overview/) — System architecture

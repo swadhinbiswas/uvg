@@ -1,0 +1,9 @@
+include LICENSE
+include CHANGELOG.md
+include README.md
+recursive-include src/uvg *.py
+recursive-include src/uvg *.typed
+global-exclude __pycache__
+global-exclude *.py[cod]
+global-exclude .mypy_cache
+global-exclude .pytest_cache

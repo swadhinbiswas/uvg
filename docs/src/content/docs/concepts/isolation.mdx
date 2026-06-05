@@ -1,0 +1,132 @@
+---
+title: Dependency Isolation
+description: UVG enforces strict dependency isolation — projects see only their declared dependencies, preventing import leakage and dependency conflicts.
+---
+
+UVG enforces **strict dependency isolation** — each project sees only its declared dependencies. This prevents import leakage, dependency conflicts, and subtle bugs.
+
+## The Problem
+
+Without isolation, Python's import system can find packages from:
+- System Python installation
+- Other virtual environments
+- User site-packages (`~/.local/lib/python3.x/`)
+- `PYTHONPATH` environment variable
+
+This leads to:
+- **Import leakage** — Using packages you didn't declare
+- **Version conflicts** — Different projects needing different versions
+- **Heisenbugs** — Code works on one machine but not another
+
+## UVG's Solution
+
+### Isolated Import Paths
+
+When you run code via `uvg run`, UVG sets `PYTHONPATH` to point **only** to your project's runtime:
+
+```bash
+PYTHONPATH=/path/to/project/.uvg/runtime/site-packages python script.py
+```
+
+This means:
+- System packages are **not** visible
+- Other projects' packages are **not** visible
+- Only your declared dependencies are visible
+
+### Symlink-Based Isolation
+
+Each project's runtime has its own `site-packages/` directory with symlinks only to the packages it needs:
+
+```
+project-a/.uvg/runtime/site-packages/
+  ├── numpy → ~/.uvg/store/objects/sha256/abc123.../wheel/numpy
+  └── pandas → ~/.uvg/store/objects/sha256/def456.../wheel/pandas
+
+project-b/.uvg/runtime/site-packages/
+  ├── numpy → ~/.uvg/store/objects/sha256/abc123.../wheel/numpy
+  └── scipy → ~/.uvg/store/objects/sha256/ghi789.../wheel/scipy
+```
+
+Project A cannot import `scipy`. Project B cannot import `pandas`.
+
+### No System Site-Packages
+
+UVG runtimes do **not** include system site-packages. This is different from UV's default behavior:
+
+```bash
+# UV default: includes system site-packages
+uv run python -c "import sys; print(sys.path)"
+
+# UVG: isolated, no system packages
+uvg run python -c "import sys; print(sys.path)"
+```
+
+## Verification
+
+Check that your project is properly isolated:
+
+```bash
+uvg run python -c "import sys; print(sys.path)"
+```
+
+You should see only:
+- Your project directory
+- Your runtime's `site-packages/`
+- Python standard library
+
+## Common Scenarios
+
+### Scenario 1: Missing Import
+
+```python
+# script.py
+import requests  # Not declared in pyproject.toml
+```
+
+```bash
+uvg run python script.py
+# ModuleNotFoundError: No module named 'requests'
+```
+
+**Fix:** Add the dependency:
+
+```bash
+uvg add requests
+uvg sync
+```
+
+### Scenario 2: Version Conflict
+
+```bash
+# Project A needs numpy 1.26.0
+# Project B needs numpy 1.24.0
+
+# Both work correctly because they have isolated runtimes
+uvg run python -c "import numpy; print(numpy.__version__)"  # 1.26.0
+cd ../project-b
+uvg run python -c "import numpy; print(numpy.__version__)"  # 1.24.0
+```
+
+### Scenario 3: Shared Dependencies
+
+Both projects share the same store object (deduplication), but have isolated runtimes:
+
+```
+~/.uvg/store/objects/sha256/abc123-numpy/  # Stored once
+project-a/.uvg/runtime/site-packages/numpy → symlink
+project-b/.uvg/runtime/site-packages/numpy → symlink
+```
+
+## Best Practices
+
+1. **Always use `uvg run`** — Ensures correct `PYTHONPATH`
+2. **Don't modify `PYTHONPATH` manually** — Let UVG manage it
+3. **Declare all dependencies** — Don't rely on implicit imports
+4. **Use `uvg scan`** — Find unused or missing imports
+5. **Run `uvg doctor`** — Verify runtime integrity
+
+## Next Steps
+
+- [CLI: scan](/cli/scan/) — Find unused or missing imports
+- [CLI: doctor](/cli/doctor/) — Verify runtime integrity
+- [Workspace Mode](/guides/workspace/) — Manage multiple projects

@@ -1,0 +1,164 @@
+---
+title: "Store Architecture"
+description: "Deep dive into UVG content-addressable store: object layout, SQLite index, WAL mode, and deduplication."
+---
+
+UVG's store is a content-addressable storage system with SQLite indexing.
+
+## Directory Layout
+
+```
+~/.uvg/store/
+├── objects/
+│   └── sha256/
+│       ├── abc123-cp312-manylinux2014-x86_64/
+│       │   ├── object.json
+│       │   └── wheel/
+│       │       ├── numpy/
+│       │       ├── numpy-1.26.0.dist-info/
+│       │       └── ...
+│       └── ...
+└── index.db
+```
+
+## Object Structure
+
+### Directory Name
+
+```
+{hash}-{abi_tag}-{platform_tag}-{architecture}/
+```
+
+Example: `abc123-cp312-manylinux2014-x86_64/`
+
+### Metadata (object.json)
+
+```json
+{
+  "hash": "abc123...",
+  "name": "numpy",
+  "version": "1.26.0",
+  "python_version": "3.12",
+  "abi_tag": "cp312",
+  "platform_tag": "manylinux2014_x86_64",
+  "architecture": "x86_64",
+  "size": 41943040,
+  "file_count": 1247,
+  "created_at": "2024-01-15T10:30:00Z"
+}
+```
+
+### Wheel Contents
+
+Extracted wheel preserving internal structure:
+- Package modules
+- `.dist-info/` metadata
+- Entry points
+- Data files
+
+## SQLite Index
+
+### Schema
+
+```sql
+CREATE TABLE objects (
+    hash TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    version TEXT NOT NULL,
+    python_version TEXT NOT NULL,
+    abi_tag TEXT NOT NULL,
+    platform_tag TEXT NOT NULL,
+    architecture TEXT NOT NULL,
+    size INTEGER NOT NULL,
+    file_count INTEGER NOT NULL,
+    created_at TEXT NOT NULL
+);
+
+CREATE INDEX idx_name ON objects(name);
+CREATE INDEX idx_name_version ON objects(name, version);
+```
+
+### WAL Mode
+
+Write-Ahead Logging enables:
+- Concurrent reads
+- ACID transactions
+- Crash recovery
+- No database locking during reads
+
+```python
+conn = sqlite3.connect(path)
+conn.execute("PRAGMA journal_mode=WAL")
+conn.execute("PRAGMA synchronous=NORMAL")
+```
+
+## Operations
+
+### Create
+
+1. Compute SHA-256 hash of wheel
+2. Check if hash exists (deduplication)
+3. Extract wheel to store directory
+4. Write `object.json`
+5. Insert into SQLite index
+
+### Read
+
+1. Look up hash in SQLite index
+2. Verify directory exists
+3. Read `object.json`
+4. Return object path and metadata
+
+### Delete
+
+1. Verify not referenced by any runtime
+2. Delete directory
+3. Remove from SQLite index
+
+### List
+
+1. Query SQLite index
+2. Filter by name, version, or other fields
+3. Return matching objects
+
+## Deduplication
+
+### How It Works
+
+```python
+def create_object(wheel_path: Path) -> StoreObject:
+    hash = compute_file_hash(wheel_path)
+    
+    if index.has_object(hash):
+        return index.get_object(hash)  # Reuse existing
+    
+    # Create new object
+    obj = extract_wheel(wheel_path, hash)
+    index.add_object(obj)
+    return obj
+```
+
+### Collision Resistance
+
+SHA-256 provides 2^256 possible hashes. The probability of collision is negligible.
+
+## Performance
+
+| Operation | Time |
+|-----------|------|
+| Object creation | 13.57 μs |
+| Object lookup | 8.29 μs |
+| Index query | < 1 ms |
+| Hash computation | Proportional to file size |
+
+## Immutability
+
+Store objects are **never modified** after creation:
+- Ensures fingerprint validity
+- Enables runtime reuse
+- Simplifies integrity verification
+
+## Next Steps
+
+- [Runtime Architecture](/architecture/runtime/) — How runtimes reference store objects
+- [Database Design](/architecture/database/) — SQLite schema details

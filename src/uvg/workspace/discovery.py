@@ -1,15 +1,18 @@
 """Workspace discovery and manifest parsing.
 
 Discovers projects in a monorepo by scanning for pyproject.toml files
-and parsing workspace configuration.
+and parsing UV workspace configuration (tool.uv.workspace).
 """
 
 from __future__ import annotations
 
+import fnmatch
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, ClassVar
+
+from uvg.uv.config import UVProjectConfig, load_project_config
 
 
 @dataclass
@@ -22,6 +25,8 @@ class WorkspaceProject:
     python_version: str = ""
     has_runtime: bool = False
     runtime_fingerprint: str = ""
+    is_workspace_root: bool = False
+    uv_config: UVProjectConfig | None = None
 
     @property
     def runtime_dir(self) -> Path:
@@ -41,6 +46,7 @@ class WorkspaceManifest:
     projects: list[WorkspaceProject] = field(default_factory=list)
     members: list[str] = field(default_factory=list)
     exclude: list[str] = field(default_factory=list)
+    uv_config: UVProjectConfig | None = None
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary.
@@ -58,6 +64,7 @@ class WorkspaceManifest:
                     "path": str(p.path),
                     "dependencies": p.dependencies,
                     "python_version": p.python_version,
+                    "is_workspace_root": p.is_workspace_root,
                 }
                 for p in self.projects
             ],
@@ -80,6 +87,7 @@ class WorkspaceManifest:
                 path=Path(p["path"]),
                 dependencies=p.get("dependencies", []),
                 python_version=p.get("python_version", ""),
+                is_workspace_root=p.get("is_workspace_root", False),
             )
             for p in data.get("projects", [])
         ]
@@ -143,12 +151,23 @@ class WorkspaceManifest:
                 dep_map.setdefault(dep, []).append(project.name)
         return {dep: projects for dep, projects in dep_map.items() if len(projects) > 1}
 
+    @property
+    def workspace_members(self) -> list[WorkspaceProject]:
+        """Get projects that are workspace members.
+
+        Returns:
+            List of workspace member projects.
+        """
+        if not self.uv_config or not self.uv_config.workspace:
+            return self.projects
+        return [p for p in self.projects if p.is_workspace_root or p.uv_config]
+
 
 class WorkspaceDiscovery:
     """Discovers and manages workspace projects.
 
     Scans directory trees for pyproject.toml files and
-    builds a workspace manifest.
+    builds a workspace manifest using UV workspace configuration.
     """
 
     DEFAULT_EXCLUDE: ClassVar[list[str]] = [
@@ -157,6 +176,7 @@ class WorkspaceDiscovery:
         ".git",
         "node_modules",
         ".tox",
+        ".uvg",
     ]
 
     def __init__(self, root: Path) -> None:
@@ -184,18 +204,40 @@ class WorkspaceDiscovery:
         if exclude is None:
             exclude = []
 
-        all_exclude = set(self.DEFAULT_EXCLUDE) | set(exclude)
-        projects = self._scan_directory(self.root, all_exclude, max_depth, current_depth=0)
+        root_pyproject = self.root / "pyproject.toml"
+        root_config: UVProjectConfig | None = None
+        workspace_members: list[str] = []
+        workspace_exclude: list[str] = []
+
+        if root_pyproject.exists():
+            root_config = load_project_config(root_pyproject)
+            if root_config.workspace:
+                workspace_members = root_config.workspace.members
+                workspace_exclude = root_config.workspace.exclude
+
+        all_exclude = set(self.DEFAULT_EXCLUDE) | set(exclude) | set(workspace_exclude)
+
+        projects = self._scan_directory(
+            self.root,
+            all_exclude,
+            workspace_members,
+            max_depth,
+            current_depth=0,
+        )
 
         return WorkspaceManifest(
             root=self.root,
             projects=projects,
+            members=workspace_members,
+            exclude=workspace_exclude,
+            uv_config=root_config,
         )
 
     def _scan_directory(
         self,
         directory: Path,
         exclude: set[str],
+        workspace_members: list[str],
         max_depth: int,
         current_depth: int,
     ) -> list[WorkspaceProject]:
@@ -204,6 +246,7 @@ class WorkspaceDiscovery:
         Args:
             directory: Directory to scan.
             exclude: Patterns to exclude.
+            workspace_members: UV workspace member globs.
             max_depth: Maximum depth to scan.
             current_depth: Current recursion depth.
 
@@ -215,19 +258,29 @@ class WorkspaceDiscovery:
 
         projects: list[WorkspaceProject] = []
         pyproject = directory / "pyproject.toml"
+        uvg_lock = directory / "uvg.lock"
 
-        if pyproject.exists() and directory != self.root:
-            project = self._parse_project(directory, pyproject)
+        # Detect project if it has pyproject.toml or uvg.lock
+        if pyproject.exists():
+            project = self._parse_project(directory, pyproject, workspace_members)
+            if project:
+                projects.append(project)
+        elif uvg_lock.exists():
+            # Parse project from uvg.lock only
+            project = self._parse_uvg_lock_project(directory, uvg_lock, workspace_members)
             if project:
                 projects.append(project)
 
         try:
             for entry in sorted(directory.iterdir()):
                 if entry.is_dir() and entry.name not in exclude:
+                    if workspace_members and not self._matches_workspace_glob(entry, workspace_members):
+                        continue
                     projects.extend(
                         self._scan_directory(
                             entry,
                             exclude,
+                            workspace_members,
                             max_depth,
                             current_depth + 1,
                         )
@@ -237,28 +290,53 @@ class WorkspaceDiscovery:
 
         return projects
 
+    def _matches_workspace_glob(self, directory: Path, workspace_members: list[str]) -> bool:
+        """Check if a directory matches workspace member globs.
+
+        Args:
+            directory: Directory to check.
+            workspace_members: List of workspace member globs.
+
+        Returns:
+            True if directory matches any glob.
+        """
+        rel_path = str(directory.relative_to(self.root))
+        for pattern in workspace_members:
+            if fnmatch.fnmatch(rel_path, pattern):
+                return True
+            if fnmatch.fnmatch(directory.name, pattern):
+                return True
+        return False
+
     def _parse_project(
         self,
         directory: Path,
         pyproject_path: Path,
+        workspace_members: list[str],
     ) -> WorkspaceProject | None:
         """Parse a project's pyproject.toml.
 
         Args:
             directory: Project directory.
             pyproject_path: Path to pyproject.toml.
+            workspace_members: UV workspace member globs.
 
         Returns:
             WorkspaceProject or None if parsing fails.
         """
         try:
-            content = pyproject_path.read_text(encoding="utf-8")
-        except OSError:
+            uv_config = load_project_config(pyproject_path)
+        except Exception:
             return None
 
         name = directory.name
         dependencies: list[str] = []
         python_version = ""
+
+        try:
+            content = pyproject_path.read_text(encoding="utf-8")
+        except OSError:
+            return None
 
         for line in content.splitlines():
             line = line.strip()
@@ -280,6 +358,10 @@ class WorkspaceDiscovery:
             if fp_path.exists():
                 runtime_fp = fp_path.read_text(encoding="utf-8").strip()
 
+        is_workspace_root = uv_config.has_workspace
+        if not is_workspace_root and workspace_members:
+            is_workspace_root = self._matches_workspace_glob(directory, workspace_members)
+
         return WorkspaceProject(
             name=name,
             path=directory,
@@ -287,6 +369,62 @@ class WorkspaceDiscovery:
             python_version=python_version,
             has_runtime=has_runtime,
             runtime_fingerprint=runtime_fp,
+            is_workspace_root=is_workspace_root,
+            uv_config=uv_config,
+        )
+
+    def _parse_uvg_lock_project(
+        self,
+        directory: Path,
+        uvg_lock_path: Path,
+        workspace_members: list[str],
+    ) -> WorkspaceProject | None:
+        """Parse a project's uvg.lock file.
+
+        Args:
+            directory: Project directory.
+            uvg_lock_path: Path to uvg.lock.
+            workspace_members: UV workspace member globs.
+
+        Returns:
+            WorkspaceProject or None if parsing fails.
+        """
+        try:
+            with open(uvg_lock_path, encoding="utf-8") as f:
+                lockfile = json.load(f)
+        except Exception:
+            return None
+
+        name = directory.name
+        dependencies: list[str] = []
+        python_version = lockfile.get("python_version", "")
+
+        # Extract dependencies from lockfile
+        for pkg in lockfile.get("packages", []):
+            dep_name = pkg.get("name", "")
+            if dep_name:
+                dependencies.append(dep_name)
+
+        has_runtime = (directory / ".uvg" / "runtime" / "manifest.json").exists()
+        runtime_fp = ""
+        if has_runtime:
+            fp_path = directory / ".uvg" / "runtime" / "fingerprint"
+            if fp_path.exists():
+                runtime_fp = fp_path.read_text(encoding="utf-8").strip()
+
+        is_workspace_root = False
+        if workspace_members:
+            is_workspace_root = self._matches_workspace_glob(directory, workspace_members)
+
+        return WorkspaceProject(
+            name=name,
+            path=directory,
+            dependencies=dependencies,
+            python_version=python_version,
+            has_runtime=has_runtime,
+            runtime_fingerprint=runtime_fp,
+            is_workspace_root=is_workspace_root,
+            uv_config=None,
         )
 
     def get_dependency_graph(self) -> dict[str, list[str]]:
