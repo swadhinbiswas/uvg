@@ -130,7 +130,8 @@ name = "requests"
 version = "2.31.0"
 source = { registry = "https://pypi.org/simple" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/requests-2.31.0-py3-none-any.whl", hash = "sha256:abc123", size = 1000 },
+    { url = "https://files.pythonhosted.org/packages/requests-2.31.0-py3-none-any.whl",
+      hash = "sha256:abc123", size = 1000 },
 ]
 
 [[package]]
@@ -138,7 +139,8 @@ name = "certifi"
 version = "2023.7.22"
 source = { registry = "https://pypi.org/simple" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/certifi-2023.7.22-py3-none-any.whl", hash = "sha256:def456", size = 500 },
+    { url = "https://files.pythonhosted.org/packages/certifi-2023.7.22-py3-none-any.whl",
+      hash = "sha256:def456", size = 500 },
 ]
 """
         lockfile_path = tmp_path / "uv.lock"
@@ -161,7 +163,8 @@ version = "2.31.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = ["certifi", "urllib3"]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/requests-2.31.0-py3-none-any.whl", hash = "sha256:abc123", size = 1000 },
+    { url = "https://files.pythonhosted.org/packages/requests-2.31.0-py3-none-any.whl",
+      hash = "sha256:abc123", size = 1000 },
 ]
 
 [[package]]
@@ -169,7 +172,8 @@ name = "certifi"
 version = "2023.7.22"
 source = { registry = "https://pypi.org/simple" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/certifi-2023.7.22-py3-none-any.whl", hash = "sha256:def456", size = 500 },
+    { url = "https://files.pythonhosted.org/packages/certifi-2023.7.22-py3-none-any.whl",
+      hash = "sha256:def456", size = 500 },
 ]
 """
         lockfile_path = tmp_path / "uv.lock"

@@ -1,8 +1,5 @@
 """Tests for UV downloader."""
 
-from pathlib import Path
-import pytest
-
 from uvg.uv.downloader import UVDownloader
 
 

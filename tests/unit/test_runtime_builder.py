@@ -1,7 +1,6 @@
 """Tests for runtime builder."""
 
 from pathlib import Path
-import pytest
 
 from uvg.runtime.builder import RuntimeBuilder
 
@@ -32,6 +31,7 @@ class TestRuntimeBuilder:
         assert manifest_path.exists()
 
         import json
+
         with open(manifest_path) as f:
             manifest = json.load(f)
 

@@ -1,7 +1,6 @@
 """Tests for UV cache integration."""
 
 from pathlib import Path
-import pytest
 
 from uvg.uv.cache import UVCache
 
